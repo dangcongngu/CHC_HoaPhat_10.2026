@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.0';
+  const APP_VERSION = '1.0.1';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -15,8 +15,9 @@
   };
 
   const state = {
-    url: store.get('url', CFG.supabaseUrl || ''),
-    key: store.get('key', CFG.supabasePublishableKey || ''),
+    // URL và khóa publishable lấy từ config.js; chỉ dùng giá trị khác nếu quản trị viên chủ động đổi trong mục "Nâng cao".
+    url: store.get('override', null)?.url || CFG.supabaseUrl || '',
+    key: store.get('override', null)?.key || CFG.supabasePublishableKey || '',
     access: store.get('access', ''),
     device: store.get('device', 'Điện thoại ' + Math.floor(100 + Math.random() * 900)),
     patients: [],
@@ -30,6 +31,7 @@
     online: false
   };
   store.set('device', state.device);
+  store.del('url'); store.del('key');                            // bỏ các giá trị cũ đã lưu ở phiên bản trước
 
   class NetError extends Error {}
   class ApiError extends Error {}
@@ -414,7 +416,9 @@
   async function saveSettings() {
     state.url = $('setUrl').value.trim(); state.key = $('setKey').value.trim(); state.access = $('setAccess').value.trim();
     state.device = $('setDevice').value.trim() || state.device;
-    store.set('url', state.url); store.set('key', state.key); store.set('access', state.access); store.set('device', state.device);
+    store.set('access', state.access); store.set('device', state.device);
+    if (state.url !== CFG.supabaseUrl || state.key !== CFG.supabasePublishableKey) store.set('override', { url: state.url, key: state.key });
+    else store.del('override');
     if (!state.url || !state.key || !state.access) { showSettingsMsg('Cần nhập đủ Project URL, Publishable key và Mã truy cập.', true); return; }
     showSettingsMsg('Đang kết nối...', false);
     try { await loadAll(); showSettingsMsg(`Kết nối thành công, đã tải ${state.patients.length.toLocaleString('vi-VN')} bệnh nhân.`, false); showView('scan'); }

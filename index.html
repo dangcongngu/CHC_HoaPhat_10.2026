@@ -79,13 +79,16 @@
 
     <!-- ======================= CÀI ĐẶT ======================= -->
     <section id="view-settings" class="view" hidden>
-      <h3>Kết nối</h3>
-      <label>Project URL<input id="setUrl" type="url" autocomplete="off" spellcheck="false"></label>
-      <label>Publishable key<input id="setKey" type="text" autocomplete="off" spellcheck="false"></label>
-      <label>Mã truy cập
-        <input id="setAccess" type="password" autocomplete="off" spellcheck="false">
+      <h3>Mã truy cập</h3>
+      <label>Nhập mã truy cập do quản trị viên cấp
+        <input id="setAccess" type="password" autocomplete="off" spellcheck="false" placeholder="Mã truy cập">
       </label>
-      <label>Tên thiết bị (ghi lại ai nộp hồ sơ)<input id="setDevice" type="text" autocomplete="off"></label>
+      <details class="adv">
+        <summary>Nâng cao (thường không cần đổi)</summary>
+        <label>Project URL<input id="setUrl" type="url" autocomplete="off" spellcheck="false"></label>
+        <label>Publishable key<input id="setKey" type="text" autocomplete="off" spellcheck="false"></label>
+        <label>Tên thiết bị (ghi lại thiết bị nào nộp hồ sơ)<input id="setDevice" type="text" autocomplete="off"></label>
+      </details>
       <div class="row">
         <button id="btnSave" class="btn primary">Lưu và tải danh sách</button>
         <button id="btnLogout" class="btn danger">Xóa mã truy cập</button>
