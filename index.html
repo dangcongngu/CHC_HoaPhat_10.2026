@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2668a6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Nộp hồ sơ">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Nộp hồ sơ - Lượm Lúa</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <img src="icons/icon-192.png" alt="" class="logo">
+    <div class="title">
+      <strong>Nộp hồ sơ</strong>
+      <span id="subtitle">Quét QR khi bệnh nhân ra cổng</span>
+    </div>
+    <div class="conn" id="conn" title="Trạng thái kết nối"><i class="dot"></i><span id="connText">Chưa kết nối</span></div>
+  </header>
+
+  <main>
+    <!-- ======================= QUÉT ======================= -->
+    <section id="view-scan" class="view">
+      <div class="scanbox idle" id="scanbox">
+        <video id="video" playsinline muted></video>
+        <canvas id="canvas" hidden></canvas>
+        <div class="frame" aria-hidden="true"></div>
+        <div class="scan-hint" id="scanHint">Bấm “Bật camera” để quét mã QR</div>
+      </div>
+      <div class="row">
+        <button id="btnCamera" class="btn primary">Bật camera</button>
+        <button id="btnTorch" class="btn" hidden>Đèn flash</button>
+      </div>
+
+      <div id="banner" class="banner info" role="status" aria-live="polite">
+        <div class="b-title">Sẵn sàng</div>
+        <div class="b-detail">Vào “Cài đặt” nhập mã truy cập, sau đó quét QR của bệnh nhân.</div>
+      </div>
+
+      <form id="manualForm" class="manual" autocomplete="off">
+        <input id="manualInput" type="text" inputmode="text" enterkeyhint="go" placeholder="Hoặc nhập / quét Mã NV rồi bấm Ghi nhận" autocapitalize="characters" spellcheck="false">
+        <button class="btn success" type="submit">Ghi nhận</button>
+      </form>
+
+      <h3>Lịch sử quét gần đây</h3>
+      <ul id="history" class="history"></ul>
+    </section>
+
+    <!-- ======================= DANH SÁCH ======================= -->
+    <section id="view-list" class="view" hidden>
+      <div class="cards" id="cards"></div>
+      <div class="filters">
+        <input id="search" type="search" placeholder="Tìm Mã NV / STT / Họ tên (không cần dấu)" autocomplete="off">
+        <select id="statusFilter">
+          <option value="all">Tất cả</option>
+          <option value="submitted">Đã nộp hồ sơ</option>
+          <option value="pending">Chưa nộp hồ sơ</option>
+          <option value="waiting">Đã khám - chờ nộp hồ sơ</option>
+          <option value="notExamined">Chưa khám</option>
+        </select>
+        <div class="datefilter">
+          <label class="chk"><input type="checkbox" id="dateOn"> Lọc theo ngày</label>
+          <select id="dateBasis"><option value="submitted">Ngày nộp hồ sơ</option><option value="examined">Ngày khám</option></select>
+          <input type="date" id="dateValue">
+          <button class="btn small" id="btnToday" type="button">Hôm nay</button>
+        </div>
+        <div id="dayInfo" class="dayinfo"></div>
+      </div>
+      <div id="listInfo" class="listinfo"></div>
+      <ul id="list" class="list"></ul>
+      <button id="btnMore" class="btn block" hidden>Xem thêm</button>
+    </section>
+
+    <!-- ======================= CÀI ĐẶT ======================= -->
+    <section id="view-settings" class="view" hidden>
+      <h3>Kết nối</h3>
+      <label>Project URL<input id="setUrl" type="url" autocomplete="off" spellcheck="false"></label>
+      <label>Publishable key<input id="setKey" type="text" autocomplete="off" spellcheck="false"></label>
+      <label>Mã truy cập
+        <input id="setAccess" type="password" autocomplete="off" spellcheck="false">
+      </label>
+      <label>Tên thiết bị (ghi lại ai nộp hồ sơ)<input id="setDevice" type="text" autocomplete="off"></label>
+      <div class="row">
+        <button id="btnSave" class="btn primary">Lưu và tải danh sách</button>
+        <button id="btnLogout" class="btn danger">Xóa mã truy cập</button>
+      </div>
+      <p id="settingsMsg" class="msg"></p>
+
+      <h3>Dữ liệu chưa gửi</h3>
+      <p id="queueInfo" class="msg">Không có thao tác nào chờ gửi.</p>
+      <div class="row">
+        <button id="btnFlush" class="btn">Gửi lại ngay</button>
+        <button id="btnReload" class="btn">Tải lại danh sách</button>
+      </div>
+
+      <h3>Cài lên màn hình chính</h3>
+      <p class="msg small">Android (Chrome): menu ⋮ → “Cài đặt ứng dụng / Thêm vào màn hình chính”.<br>iPhone (Safari): nút Chia sẻ → “Thêm vào MH chính”.</p>
+      <p class="msg small" id="version"></p>
+    </section>
+  </main>
+
+  <!-- chi tiết bệnh nhân -->
+  <dialog id="detail" class="sheet">
+    <div class="sheet-body">
+      <div id="detailBody"></div>
+      <div class="row">
+        <button id="detailAction" class="btn success">Đánh dấu đã nộp hồ sơ</button>
+        <button id="detailClose" class="btn">Đóng</button>
+      </div>
+    </div>
+  </dialog>
+
+  <nav class="tabs">
+    <button data-view="scan" class="active"><span class="ic">▣</span>Quét</button>
+    <button data-view="list"><span class="ic">☰</span>Danh sách</button>
+    <button data-view="settings"><span class="ic">⚙</span>Cài đặt</button>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

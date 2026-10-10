@@ -1,0 +1,8 @@
+# Không bao giờ đưa dữ liệu bệnh nhân hoặc file Excel/Word lên GitHub.
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+*.docx
+*.pdf
+*.bak
