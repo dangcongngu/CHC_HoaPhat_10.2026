@@ -5,7 +5,8 @@
   --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; height: 100%; }
+html, body { margin: 0; min-height: 100%; overflow-x: hidden; }
+img, video, canvas, svg { max-width: 100%; }
 body {
   font: 16px/1.4 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--text); background: var(--bg); padding-bottom: calc(68px + var(--safe-b));
@@ -22,7 +23,7 @@ body {
 .dot { width: 9px; height: 9px; border-radius: 50%; background: #bbb; display: inline-block; }
 .conn.ok .dot { background: #5ee08a; } .conn.bad .dot { background: #ff7a7a; } .conn.wait .dot { background: #ffd36b; }
 
-main { padding: 12px; max-width: 720px; margin: 0 auto; }
+main { padding: 12px; padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); max-width: 1180px; margin: 0 auto; }
 .view[hidden] { display: none; }
 h3 { margin: 18px 2px 8px; font-size: 14px; color: var(--blue-d); text-transform: uppercase; letter-spacing: .03em; }
 
@@ -147,3 +148,92 @@ label input { margin-top: 4px; color: var(--text); }
 .tabs button { appearance: none; border: 0; background: none; padding: 8px 4px 9px; font: inherit; font-size: 12px; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .tabs button .ic { font-size: 22px; line-height: 1; }
 .tabs button.active { color: var(--blue); font-weight: 700; }
+
+/* =====================================================================
+   Responsive: điện thoại nhỏ -> điện thoại -> điện thoại xoay ngang -> máy tính bảng
+   ===================================================================== */
+.scan-grid { display: block; }
+#view-settings { max-width: 560px; margin-left: auto; margin-right: auto; }
+
+/* điện thoại rất nhỏ (<= 360px, ví dụ iPhone SE, Galaxy A cũ) */
+@media (max-width: 360px) {
+  body { font-size: 15px; }
+  main { padding: 8px; }
+  .title strong { font-size: 15px; }
+  .conn { padding: 4px 7px; font-size: 11px; }
+  .btn { padding: 10px 10px; font-size: 15px; }
+  .card .c-val { font-size: 22px; }
+  .p-title, .p-name { font-size: 19px; }
+  .kv { grid-template-columns: 96px 1fr; }
+  .tabs button { font-size: 11px; }
+}
+
+/* điện thoại xoay ngang rộng và máy tính bảng dọc trở lên (>= 700px): hai cột */
+@media (min-width: 700px) {
+  body { font-size: 17px; }
+  main { padding: 16px; }
+  .topbar { padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right)); }
+  .title strong { font-size: 19px; } .title span { font-size: 13px; }
+  .logo { width: 44px; height: 44px; }
+
+  /* tab Quét: camera + thông báo bên trái, tìm kiếm + lịch sử bên phải */
+  .scan-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  .scanbox { height: 260px; }
+  .scan-side .manual { margin-top: 0; }
+  #quickResults { display: block; }
+
+  /* tab Danh sách: 5 ô thống kê trên một hàng, danh sách nhiều cột */
+  .cards { grid-template-columns: repeat(5, 1fr); }
+  .card.wide { grid-column: auto; }
+  .card .c-val { font-size: 28px; }
+  .filters { grid-template-columns: 2fr 1fr; align-items: start; }
+  .datefilter { grid-column: 1 / -1; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto; }
+  .datefilter .chk { grid-column: auto; }
+  .dayinfo { grid-column: 1 / -1; }
+  #list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+  #list .item { margin: 0; }
+  #btnMore { max-width: 360px; margin-left: auto; margin-right: auto; display: block; }
+
+  /* bảng chi tiết: cửa sổ giữa màn hình thay vì trượt từ dưới lên */
+  .sheet { margin: auto; width: min(540px, 92vw); border-radius: 18px; }
+  .sheet-body { padding: 22px; }
+
+  /* popup kết quả quét lớn hơn */
+  .popup-card { width: min(520px, 100%); padding: 32px 26px 24px; }
+  .p-icon { width: 100px; height: 100px; font-size: 62px; }
+  .p-title { font-size: 28px; } .p-name { font-size: 26px; } .p-detail { font-size: 20px; }
+  .p-actions { grid-template-columns: 1fr 1fr; }
+  .p-actions .btn:only-child { grid-column: 1 / -1; }
+  .p-actions .btn { min-height: 58px; font-size: 19px; }
+}
+
+/* máy tính bảng ngang / màn hình lớn (>= 1000px) */
+@media (min-width: 1000px) {
+  .scanbox { height: 320px; }
+  #list { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+  .history li { font-size: 15px; }
+}
+
+/* thiết bị cảm ứng: vùng chạm tối thiểu 44px */
+@media (pointer: coarse) {
+  .btn, input[type=text], input[type=search], input[type=url], input[type=password], input[type=date], select { min-height: 48px; }
+  .tabs button { min-height: 56px; }
+}
+
+/* điện thoại xoay ngang / màn hình thấp: gọn lại để còn chỗ cho nội dung */
+@media (max-height: 520px) and (orientation: landscape) {
+  body { padding-bottom: calc(52px + var(--safe-b)); }
+  .topbar { padding-top: calc(4px + var(--safe-t)); padding-bottom: 4px; }
+  .logo { width: 30px; height: 30px; }
+  .tabs button { padding: 4px 4px 5px; flex-direction: row; justify-content: center; gap: 8px; font-size: 13px; }
+  .tabs button .ic { font-size: 17px; }
+  .scanbox { height: 150px; }
+  .banner { margin: 8px 0; padding: 10px 12px 10px 14px; }
+  .banner .b-title { font-size: 17px; }
+  .popup { padding: 8px; align-items: flex-start; overflow-y: auto; }
+  .popup-card { padding: 14px 16px 14px; }
+  .p-icon { width: 56px; height: 56px; font-size: 34px; margin-bottom: 4px; }
+  .p-title { font-size: 18px; } .p-name { font-size: 18px; margin-top: 4px; } .p-detail { font-size: 15px; }
+  .p-actions { grid-template-columns: 1fr 1fr; margin-top: 10px; } .p-actions .btn { min-height: 44px; font-size: 15px; }
+  .sheet { max-height: 94vh; overflow-y: auto; }
+}

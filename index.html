@@ -27,6 +27,8 @@
   <main>
     <!-- ======================= QUÉT ======================= -->
     <section id="view-scan" class="view">
+     <div class="scan-grid">
+      <div class="scan-main">
       <div class="scanbox idle" id="scanbox">
         <video id="video" playsinline muted></video>
         <canvas id="canvas" hidden></canvas>
@@ -43,7 +45,9 @@
         <div class="b-detail">Vào “Cài đặt” nhập mã truy cập, sau đó quét QR của bệnh nhân.</div>
         <button id="btnUndo" class="btn danger" type="button" hidden>Bỏ tick đã nộp hồ sơ</button>
       </div>
+      </div>
 
+      <div class="scan-side">
       <form id="manualForm" class="manual" autocomplete="off">
         <input id="manualInput" type="search" enterkeyhint="search" placeholder="Gõ Mã NV / STT / Họ tên để tìm và xác nhận thủ công" spellcheck="false">
         <button class="btn primary" type="submit">Tìm</button>
@@ -53,6 +57,8 @@
 
       <h3>Lịch sử quét gần đây</h3>
       <ul id="history" class="history"></ul>
+      </div>
+     </div>
     </section>
 
     <!-- ======================= DANH SÁCH ======================= -->
