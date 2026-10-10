@@ -44,11 +44,11 @@ h3 { margin: 18px 2px 8px; font-size: 14px; color: var(--blue-d); text-transform
 .adv summary { cursor: pointer; color: var(--muted); font-size: 14px; padding: 8px 2px; }
 
 /* quét */
-.scanbox { position: relative; background: #0b1722; border-radius: 16px; overflow: hidden; aspect-ratio: 1 / 1; max-height: 56vh; width: 100%; }
+.scanbox { position: relative; background: #0b1722; border-radius: 16px; overflow: hidden; height: 200px; width: 100%; }
 .scanbox video { width: 100%; height: 100%; object-fit: cover; display: block; }
-.frame { position: absolute; inset: 18% 18%; border: 3px solid rgba(255,255,255,.85); border-radius: 18px; box-shadow: 0 0 0 999px rgba(0,0,0,.28); pointer-events: none; }
+.frame { position: absolute; left: 50%; top: 50%; height: 80%; aspect-ratio: 1 / 1; transform: translate(-50%, -50%); border: 3px solid rgba(255,255,255,.85); border-radius: 16px; box-shadow: 0 0 0 999px rgba(0,0,0,.28); pointer-events: none; }
 .scanbox.idle .frame { display: none; }
-.scan-hint { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; color: #fff; font-size: 14px; text-shadow: 0 1px 3px #000; padding: 0 12px; }
+.scan-hint { position: absolute; left: 0; right: 0; bottom: 6px; font-size: 13px; text-align: center; color: #fff; font-size: 14px; text-shadow: 0 1px 3px #000; padding: 0 12px; }
 .scanbox.flash-ok { outline: 6px solid #5ee08a; } .scanbox.flash-warn { outline: 6px solid #ffb84d; } .scanbox.flash-err { outline: 6px solid #ff6b6b; }
 
 .banner { border-radius: 14px; padding: 14px 16px 14px 18px; margin: 12px 0; border-left: 8px solid var(--blue); background: var(--info-bg); }
@@ -69,6 +69,14 @@ label input { margin-top: 4px; color: var(--text); }
 .chk { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--text); font-size: 15px; }
 .chk input { width: 22px; height: 22px; min-height: 0; margin: 0; }
 
+.pw { position: relative; }
+.pw input { padding-right: 52px; }
+.eye { position: absolute; right: 4px; top: 4px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.eye:active { background: #eef2f7; }
+.eye[aria-pressed="true"] { color: var(--blue); }
+.eye svg[hidden] { display: none; }
+#quickResults { margin-top: 8px; }
+#quickResults .item { cursor: pointer; }
 .history { list-style: none; margin: 0; padding: 0; }
 .history li { background: var(--card); border-left: 6px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-bottom: 6px; font-size: 14px; }
 .history li.success { border-color: var(--green); background: var(--ok-bg); }

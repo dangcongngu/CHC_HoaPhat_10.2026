@@ -45,9 +45,11 @@
       </div>
 
       <form id="manualForm" class="manual" autocomplete="off">
-        <input id="manualInput" type="text" inputmode="text" enterkeyhint="go" placeholder="Hoặc nhập / quét Mã NV rồi bấm Ghi nhận" autocapitalize="characters" spellcheck="false">
-        <button class="btn success" type="submit">Ghi nhận</button>
+        <input id="manualInput" type="search" enterkeyhint="search" placeholder="Gõ Mã NV / STT / Họ tên để tìm và xác nhận thủ công" spellcheck="false">
+        <button class="btn primary" type="submit">Tìm</button>
       </form>
+      <div id="quickInfo" class="listinfo" hidden></div>
+      <ul id="quickResults" class="list"></ul>
 
       <h3>Lịch sử quét gần đây</h3>
       <ul id="history" class="history"></ul>
@@ -81,9 +83,14 @@
     <!-- ======================= CÀI ĐẶT ======================= -->
     <section id="view-settings" class="view" hidden>
       <h3>Mã truy cập</h3>
-      <label>Nhập mã truy cập do quản trị viên cấp
+      <label for="setAccess">Nhập mã truy cập do quản trị viên cấp</label>
+      <div class="pw">
         <input id="setAccess" type="password" autocomplete="off" spellcheck="false" placeholder="Mã truy cập">
-      </label>
+        <button id="btnEye" class="eye" type="button" aria-label="Hiện mã truy cập" aria-pressed="false">
+          <svg class="eye-on" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="eye-off" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
       <details class="adv">
         <summary>Nâng cao (thường không cần đổi)</summary>
         <label>Project URL<input id="setUrl" type="url" autocomplete="off" spellcheck="false"></label>
@@ -91,7 +98,7 @@
         <label>Tên thiết bị (ghi lại thiết bị nào nộp hồ sơ)<input id="setDevice" type="text" autocomplete="off"></label>
       </details>
       <div class="row">
-        <button id="btnSave" class="btn primary">Lưu và tải danh sách</button>
+        <button id="btnSave" class="btn primary">Kết Nối</button>
         <button id="btnLogout" class="btn danger">Xóa mã truy cập</button>
       </div>
       <p id="settingsMsg" class="msg"></p>
