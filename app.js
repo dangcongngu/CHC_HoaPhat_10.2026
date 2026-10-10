@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.5';
+  const APP_VERSION = '1.0.6';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -88,7 +88,7 @@
     const text = await res.text();
     let data = null; try { data = JSON.parse(text); } catch { /* không phải JSON */ }
     if (!res.ok) {
-      if (data?.code === 'PGRST202') throw new ApiError('Database chưa được thiết lập (chưa chạy schema.sql trên Supabase).');
+      if (data?.code === 'PGRST202') throw new ApiError('Dữ liệu Cloud chưa được thiết lập (quản trị viên cần chạy file schema.sql trước).');
       throw new ApiError(data?.message || `Lỗi máy chủ (HTTP ${res.status}).`);
     }
     return data;
