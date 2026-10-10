@@ -64,7 +64,17 @@ h3 { margin: 18px 2px 8px; font-size: 14px; color: var(--blue-d); text-transform
 .manual input { flex: 1; min-width: 0; }
 input[type=text], input[type=search], input[type=url], input[type=password], input[type=date], select {
   font: inherit; padding: 12px; border: 1px solid #b7c6d6; border-radius: 12px; background: #fff; min-height: 48px; width: 100%;
+  -webkit-appearance: none; appearance: none; color: var(--text); box-sizing: border-box; margin: 0;
 }
+/* iOS/Android vẽ ô ngày và danh sách thả xuống theo kiểu riêng (cao thấp lệch nhau): thống nhất giao diện */
+select {
+  padding-right: 38px; text-overflow: ellipsis;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9' fill='none' stroke='%231f5fa8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center;
+}
+input[type=date] { display: block; text-align: left; line-height: 1.2; }
+input[type=date]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
+input[type=date]::-webkit-datetime-edit { padding: 0; }
+input[type=date]::-webkit-calendar-picker-indicator { opacity: .7; }
 label { display: block; font-size: 13px; color: var(--muted); margin: 10px 2px 0; }
 label input { margin-top: 4px; color: var(--text); }
 .chk { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--text); font-size: 15px; }
@@ -117,8 +127,11 @@ label input { margin-top: 4px; color: var(--text); }
 .card .c-sub { font-size: 11px; color: var(--muted); }
 .card.wide { grid-column: span 2; }
 .filters { display: grid; gap: 8px; margin: 12px 0 6px; }
-.datefilter { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; }
-.datefilter .chk { grid-column: span 2; }
+.datefilter { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; }
+.datefilter .btn { width: 100%; justify-self: stretch; min-height: 48px; }
+.listbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 2px; }
+.listbar .listinfo { margin: 0; }
+.listbar .btn { flex: none; min-height: 42px; }
 .dayinfo { font-weight: 700; color: var(--blue-d); font-size: 14px; }
 .listinfo { font-weight: 700; color: var(--blue-d); font-size: 14px; margin: 6px 2px; }
 .list { list-style: none; margin: 0; padding: 0; }
@@ -188,7 +201,7 @@ label input { margin-top: 4px; color: var(--text); }
   .card .c-val { font-size: 28px; }
   .filters { grid-template-columns: 2fr 1fr; align-items: start; }
   .datefilter { grid-column: 1 / -1; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto; }
-  .datefilter .chk { grid-column: auto; }
+  .datefilter .btn { width: auto; order: 5; }
   .dayinfo { grid-column: 1 / -1; }
   #list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
   #list .item { margin: 0; }

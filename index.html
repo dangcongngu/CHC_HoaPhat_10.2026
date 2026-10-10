@@ -67,21 +67,27 @@
       <div class="filters">
         <input id="search" type="search" placeholder="Tìm Mã NV / STT / Họ tên (không cần dấu)" autocomplete="off">
         <select id="statusFilter">
-          <option value="all">Tất cả</option>
-          <option value="submitted">Đã nộp hồ sơ</option>
+          <option value="all">Tất cả trạng thái</option>
+          <option value="examined">Đã khám (check-in)</option>
+          <option value="notExamined">Chưa đến khám</option>
+          <option value="submitted">Đã nộp hồ sơ (check-out)</option>
+          <option value="waiting">Chờ nộp hồ sơ (đã khám, chưa nộp)</option>
           <option value="pending">Chưa nộp hồ sơ</option>
-          <option value="waiting">Đã khám - chờ nộp hồ sơ</option>
-          <option value="notExamined">Chưa khám</option>
+          <option value="check">Nộp nhưng chưa ghi nhận khám</option>
         </select>
         <div class="datefilter">
           <label class="chk"><input type="checkbox" id="dateOn"> Lọc theo ngày</label>
-          <select id="dateBasis"><option value="submitted">Ngày nộp hồ sơ</option><option value="examined">Ngày khám</option></select>
-          <input type="date" id="dateValue">
           <button class="btn small" id="btnToday" type="button">Hôm nay</button>
+          <select id="dateBasis" aria-label="Lọc theo"><option value="submitted">Ngày nộp hồ sơ</option><option value="examined">Ngày khám</option></select>
+          <input type="date" id="dateValue" aria-label="Chọn ngày">
         </div>
         <div id="dayInfo" class="dayinfo"></div>
       </div>
-      <div id="listInfo" class="listinfo"></div>
+      <div class="listbar">
+        <div id="listInfo" class="listinfo"></div>
+        <button class="btn small primary" id="btnExport" type="button">Xuất / chia sẻ</button>
+      </div>
+      <div id="exportMsg" class="dayinfo" hidden></div>
       <ul id="list" class="list"></ul>
       <button id="btnMore" class="btn block" hidden>Xem thêm</button>
     </section>

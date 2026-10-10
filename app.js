@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.6';
+  const APP_VERSION = '1.0.8';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -314,7 +314,7 @@
     const card = (cls, title, val, sub, wide = '') => `<div class="card ${cls} ${wide}"><div class="c-title">${title}</div><div class="c-val">${val.toLocaleString('vi-VN')}</div><div class="c-sub">${sub || '&nbsp;'}</div></div>`;
     $('cards').innerHTML =
       card('', 'Tổng danh sách', s.total, 'bệnh nhân') + card('', 'Đã khám', s.examined, pct(s.examined, s.total) + ' tổng danh sách') +
-      card('green', 'Đã nộp hồ sơ', s.submitted, s.examined ? pct(s.submitted, s.examined) + ' số đã khám' : '') + card('amber', 'Đã khám - chờ nộp', s.waiting, s.waiting ? 'cần thu hồ sơ' : 'không còn hồ sơ chờ') +
+      card('green', 'Đã nộp hồ sơ', s.submitted, s.examined ? pct(s.submitted, s.examined) + ' số đã khám' : '') + card('amber', 'Chờ nộp hồ sơ', s.waiting, s.waiting ? 'đã khám, chưa nộp' : 'không còn hồ sơ chờ') +
       card('red', 'Nộp nhưng chưa ghi nhận khám', s.check, s.check ? 'cần kiểm tra lại' : 'không có trường hợp lệch', 'wide');
   }
 
@@ -324,6 +324,8 @@
     const dateOn = $('dateOn').checked; const day = $('dateValue').value; const basis = $('dateBasis').value;
     return state.patients.filter((r) => {
       if (kw && !r.key.includes(kw)) return false;
+      if (status === 'examined' && !r.examinedAt) return false;
+      if (status === 'check' && !(r.submittedAt && !r.examinedAt)) return false;
       if (status === 'submitted' && !r.submittedAt) return false;
       if (status === 'pending' && r.submittedAt) return false;
       if (status === 'waiting' && !(r.examinedAt && !r.submittedAt)) return false;
@@ -348,11 +350,55 @@
     } else $('dayInfo').textContent = '';
     $('list').innerHTML = shown.map((r) => {
       const cls = r.submittedAt ? 'submitted' : r.examinedAt ? 'waiting' : '';
-      const chips = (r.examinedAt ? `<span class="chip ex">✓ Khám ${fmtHour(r.examinedAt)}</span>` : '<span class="chip">Chưa khám</span>') +
-        (r.submittedAt ? `<span class="chip sub">✓ Nộp ${fmtTime(r.submittedAt)}</span>` : r.examinedAt ? '<span class="chip wait">Chờ nộp hồ sơ</span>' : '');
+      const chips = (r.examinedAt ? `<span class="chip ex">✓ Khám ${fmtHour(r.examinedAt)}</span>` : '<span class="chip">Chưa đến khám</span>') +
+        (r.submittedAt ? `<span class="chip sub">✓ Nộp ${fmtTime(r.submittedAt)}</span>` + (r.examinedAt ? '' : '<span class="chip wait">Chưa ghi nhận khám</span>') : r.examinedAt ? '<span class="chip wait">Chờ nộp hồ sơ</span>' : '');
       return `<li class="item ${cls}" data-code="${esc(r.code)}"><div class="name">${esc(r.name)}</div><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}</div><div class="chips">${chips}</div></li>`;
     }).join('');
     $('btnMore').hidden = rows.length <= shown.length;
+  }
+
+  // ------------------------------------------------------------ xuất / chia sẻ danh sách theo bộ lọc hiện tại
+  function statusText(r) { return r.submittedAt ? (r.examinedAt ? 'Đã nộp hồ sơ' : 'Nộp nhưng chưa ghi nhận khám') : r.examinedAt ? 'Chờ nộp hồ sơ' : 'Chưa đến khám'; }
+  function loadScript(src) {
+    return new Promise((resolve, reject) => { const s = document.createElement('script'); s.src = src; s.onload = resolve; s.onerror = reject; document.head.appendChild(s); });
+  }
+  function exportName(ext) {
+    const d = new Date(); const part = (v) => String(v).padStart(2, '0');
+    const label = fold($('statusFilter').selectedOptions[0].textContent.split('(')[0].trim()).replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    return `DanhSach_${label}_${d.getFullYear()}${part(d.getMonth() + 1)}${part(d.getDate())}_${part(d.getHours())}${part(d.getMinutes())}.${ext}`;
+  }
+  async function exportList() {
+    const rows = filtered();
+    const msg = $('exportMsg'); msg.hidden = false;
+    if (!rows.length) { msg.textContent = 'Không có bệnh nhân nào trong bộ lọc hiện tại để xuất.'; return; }
+    const header = ['STT', 'Mã NV', 'Họ và tên', 'Trạng thái', 'Giờ khám', 'Giờ nộp hồ sơ'];
+    const data = rows.map((r) => [r.stt ?? '', r.code, r.name, statusText(r), r.examinedAt ? fmtTime(r.examinedAt) : '', r.submittedAt ? fmtTime(r.submittedAt) : '']);
+    msg.textContent = 'Đang tạo file...';
+    let blob; let name;
+    try {
+      if (!window.XLSX) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+      const ws = window.XLSX.utils.aoa_to_sheet([header, ...data]);
+      ws['!cols'] = [{ wch: 7 }, { wch: 14 }, { wch: 28 }, { wch: 28 }, { wch: 19 }, { wch: 19 }];
+      const wb = window.XLSX.utils.book_new(); window.XLSX.utils.book_append_sheet(wb, ws, 'Danh sach');
+      blob = new Blob([window.XLSX.write(wb, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      name = exportName('xlsx');
+    } catch {
+      // không tải được thư viện Excel (mất mạng): xuất CSV, vẫn mở được bằng Excel
+      const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
+      blob = new Blob(['\ufeff' + [header, ...data].map((l) => l.map(q).join(',')).join('\r\n')], { type: 'text/csv' });
+      name = exportName('csv');
+    }
+    const file = new File([blob], name, { type: blob.type });
+    const title = `Danh sách ${rows.length.toLocaleString('vi-VN')} bệnh nhân`;
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title, text: `${title} - ${$('statusFilter').selectedOptions[0].textContent}` });
+        msg.textContent = `Đã mở khung chia sẻ (${rows.length.toLocaleString('vi-VN')} dòng). Chọn Zalo để gửi.`; return;
+      } catch (e) { if (e && e.name === 'AbortError') { msg.textContent = 'Đã hủy chia sẻ.'; return; } }
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+    msg.textContent = `Đã tải file ${name} (${rows.length.toLocaleString('vi-VN')} dòng). Thiết bị này chưa hỗ trợ chia sẻ trực tiếp: mở file trong thư mục Tải xuống rồi gửi qua Zalo.`;
   }
 
   function renderHistory() {
@@ -367,8 +413,8 @@
   }
   function itemHtml(r) {
     const cls = r.submittedAt ? 'submitted' : r.examinedAt ? 'waiting' : '';
-    const chips = (r.examinedAt ? `<span class="chip ex">✓ Khám ${fmtHour(r.examinedAt)}</span>` : '<span class="chip">Chưa khám</span>') +
-      (r.submittedAt ? `<span class="chip sub">✓ Nộp ${fmtTime(r.submittedAt)}</span>` : r.examinedAt ? '<span class="chip wait">Chờ nộp hồ sơ</span>' : '');
+    const chips = (r.examinedAt ? `<span class="chip ex">✓ Khám ${fmtHour(r.examinedAt)}</span>` : '<span class="chip">Chưa đến khám</span>') +
+      (r.submittedAt ? `<span class="chip sub">✓ Nộp ${fmtTime(r.submittedAt)}</span>` + (r.examinedAt ? '' : '<span class="chip wait">Chưa ghi nhận khám</span>') : r.examinedAt ? '<span class="chip wait">Chờ nộp hồ sơ</span>' : '');
     return `<li class="item ${cls}" data-code="${esc(r.code)}"><div class="name">${esc(r.name)}</div><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}</div><div class="chips">${chips}</div></li>`;
   }
   function renderQuick() {
@@ -568,6 +614,7 @@
     });
     for (const id of ['search', 'statusFilter', 'dateOn', 'dateBasis', 'dateValue']) $(id).addEventListener('input', () => { state.shown = CFG.pageSize || 60; renderList(); });
     $('btnToday').addEventListener('click', () => { $('dateValue').value = dayKey(new Date()); $('dateOn').checked = true; state.shown = CFG.pageSize || 60; renderList(); });
+    $('btnExport').addEventListener('click', exportList);
     $('btnMore').addEventListener('click', () => { state.shown += CFG.pageSize || 60; renderList(); });
     $('list').addEventListener('click', (e) => { const li = e.target.closest('.item'); if (li) openDetail(li.dataset.code); });
     $('detailClose').addEventListener('click', () => $('detail').close());
