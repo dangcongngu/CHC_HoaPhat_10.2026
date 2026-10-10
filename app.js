@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.2';
+  const APP_VERSION = '1.0.3';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -183,7 +183,32 @@
     const el = $('banner'); el.className = 'banner ' + kind;
     el.querySelector('.b-title').textContent = title; el.querySelector('.b-detail').textContent = detail || '';
     state.undoCode = undoCode; $('btnUndo').hidden = !undoCode;       // nút "Bỏ tick" chỉ hiện khi bệnh nhân đã nộp hồ sơ
+    showPopup(kind, title, detail, undoCode);
   }
+
+  // ------------------------------------------------------------ popup kết quả quét (hiện giữa màn hình)
+  let popupTimer = null;
+  const POPUP_ICON = { success: '✓', warning: '!', error: '✕', info: 'i' };
+  function showPopup(kind, title, detail, undoCode) {
+    const card = $('popupCard');
+    card.className = 'popup-card ' + (POPUP_ICON[kind] ? kind : 'info');
+    $('popupIcon').textContent = POPUP_ICON[kind] || 'i';
+    $('popupTitle').textContent = title;
+    const lines = String(detail || '').split('\n');
+    const hasName = /\([A-Za-z0-9]+\)\s*$/.test(lines[0] || '');                // dòng đầu dạng "Họ tên (MÃ)"
+    $('popupName').textContent = hasName ? lines.shift() : '';
+    $('popupDetail').textContent = lines.join('\n');
+    $('popupUndo').hidden = !undoCode;
+    $('popupOk').textContent = undoCode ? 'Đóng' : 'OK';
+    $('popupOk').className = 'btn ' + (undoCode ? '' : 'primary');
+    $('popup').hidden = false; state.popupOpen = true;
+    clearTimeout(popupTimer);
+    // thành công tự đóng nhanh; cần thao tác (đã nộp) thì ở lại cho tới khi người dùng đóng
+    const ms = undoCode ? 0 : kind === 'success' || kind === 'info' ? 2500 : kind === 'warning' ? 4500 : 5500;
+    const timer = $('popupTimer'); timer.classList.remove('run');
+    if (ms) { timer.style.setProperty('--dur', ms + 'ms'); void timer.offsetWidth; timer.classList.add('run'); popupTimer = setTimeout(closePopup, ms); }
+  }
+  function closePopup() { clearTimeout(popupTimer); $('popup').hidden = true; state.popupOpen = false; $('popupTimer').classList.remove('run'); }
   function logHistory(kind, rec, code, result) {
     state.history.unshift({ time: new Date(), kind, code, name: rec?.name || '', stt: rec?.stt ?? '', result });
     if (state.history.length > 40) state.history.length = 40;
@@ -417,6 +442,7 @@
       }
       if (text) {
         const now = Date.now();
+        if (state.popupOpen) return;                                   // đang hiện popup: tạm dừng nhận mã mới
         if (text === lastText && now - lastAt < 3000) return;          // bỏ qua mã vừa quét (còn trong khung hình)
         lastText = text; lastAt = now;
         handleScanned(text);
@@ -452,6 +478,10 @@
     $('btnCamera').addEventListener('click', () => (scanning ? stopCamera() : startCamera()));
     $('btnTorch').addEventListener('click', toggleTorch);
     $('btnUndo').addEventListener('click', undoSubmitted);
+    $('popupOk').addEventListener('click', closePopup);
+    $('popupUndo').addEventListener('click', () => { closePopup(); undoSubmitted(); });
+    $('popup').addEventListener('click', (e) => { if (e.target === $('popup')) closePopup(); });        // chạm ra ngoài để đóng
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.popupOpen) closePopup(); });
     $('manualForm').addEventListener('submit', async (e) => {
       e.preventDefault(); const v = $('manualInput').value; $('manualInput').value = ''; await handleScanned(v); $('manualInput').focus();
     });

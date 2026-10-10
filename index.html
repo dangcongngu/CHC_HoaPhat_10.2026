@@ -109,6 +109,21 @@
     </section>
   </main>
 
+  <!-- popup kết quả quét: hiện giữa màn hình để nhìn rõ -->
+  <div id="popup" class="popup" hidden role="alertdialog" aria-live="assertive" aria-modal="true">
+    <div class="popup-card info" id="popupCard">
+      <div class="p-icon" id="popupIcon">i</div>
+      <div class="p-title" id="popupTitle"></div>
+      <div class="p-name" id="popupName"></div>
+      <div class="p-detail" id="popupDetail"></div>
+      <div class="p-actions">
+        <button id="popupUndo" class="btn danger" type="button" hidden>Bỏ tick đã nộp hồ sơ</button>
+        <button id="popupOk" class="btn primary" type="button">Đóng</button>
+      </div>
+      <div class="p-timer" id="popupTimer"><i></i></div>
+    </div>
+  </div>
+
   <!-- chi tiết bệnh nhân -->
   <dialog id="detail" class="sheet">
     <div class="sheet-body">

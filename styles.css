@@ -76,6 +76,28 @@ label input { margin-top: 4px; color: var(--text); }
 .history li.error { border-color: var(--red); background: var(--err-bg); }
 .history .h-top { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px; }
 
+/* popup kết quả quét */
+.popup { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(8, 18, 30, .62); animation: fadein .12s ease-out; }
+.popup[hidden] { display: none; }
+.popup-card { position: relative; width: min(440px, 100%); background: #fff; border-radius: 22px; padding: 26px 20px 20px; text-align: center; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,.4); border-top: 12px solid var(--blue); animation: pop .16s ease-out; }
+.popup-card.success { border-color: var(--green); background: #f3fbf5; }
+.popup-card.warning { border-color: var(--amber); background: #fff8ec; }
+.popup-card.error { border-color: var(--red); background: #fff3f3; }
+.p-icon { width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 52px; font-weight: 800; color: #fff; background: var(--blue); line-height: 1; }
+.popup-card.success .p-icon { background: var(--green); } .popup-card.warning .p-icon { background: var(--amber); } .popup-card.error .p-icon { background: var(--red); }
+.p-title { font-size: 22px; font-weight: 800; line-height: 1.25; color: var(--blue); }
+.popup-card.success .p-title { color: var(--green); } .popup-card.warning .p-title { color: var(--amber); } .popup-card.error .p-title { color: var(--red); }
+.p-name { margin-top: 10px; font-size: 22px; font-weight: 700; word-break: break-word; }
+.p-detail { margin-top: 6px; font-size: 17px; color: #3a4a5c; white-space: pre-line; word-break: break-word; }
+.p-actions { display: grid; gap: 10px; margin-top: 18px; }
+.p-actions .btn { width: 100%; font-size: 17px; min-height: 52px; }
+.p-timer { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: transparent; }
+.p-timer i { display: block; height: 100%; width: 100%; background: rgba(0,0,0,.18); transform-origin: left; }
+.p-timer.run i { animation: countdown var(--dur, 2.5s) linear forwards; }
+@keyframes countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { transform: scale(.92); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+
 /* danh sách */
 .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .card { background: var(--card); border-radius: 12px; padding: 10px 12px; border-left: 6px solid var(--blue); }
