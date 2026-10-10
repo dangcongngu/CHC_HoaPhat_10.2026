@@ -58,6 +58,7 @@ h3 { margin: 18px 2px 8px; font-size: 14px; color: var(--blue-d); text-transform
 .banner.warning { background: var(--warn-bg); border-color: var(--amber); } .banner.warning .b-title { color: var(--amber); }
 .banner.error { background: var(--err-bg); border-color: var(--red); } .banner.error .b-title { color: var(--red); }
 
+.banner .btn { width: 100%; margin-top: 10px; }
 .manual { display: flex; gap: 8px; }
 .manual input { flex: 1; min-width: 0; }
 input[type=text], input[type=search], input[type=url], input[type=password], input[type=date], select {

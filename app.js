@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.1';
+  const APP_VERSION = '1.0.2';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -179,9 +179,10 @@
   }
 
   // ------------------------------------------------------------ nghiệp vụ nộp hồ sơ
-  function banner(kind, title, detail) {
+  function banner(kind, title, detail, undoCode = null) {
     const el = $('banner'); el.className = 'banner ' + kind;
     el.querySelector('.b-title').textContent = title; el.querySelector('.b-detail').textContent = detail || '';
+    state.undoCode = undoCode; $('btnUndo').hidden = !undoCode;       // nút "Bỏ tick" chỉ hiện khi bệnh nhân đã nộp hồ sơ
   }
   function logHistory(kind, rec, code, result) {
     state.history.unshift({ time: new Date(), kind, code, name: rec?.name || '', stt: rec?.stt ?? '', result });
@@ -229,8 +230,25 @@
 
   function reportAlready(rec, when) {
     const t = fmtTime(when);
-    banner('warning', 'Bệnh nhân đã khám xong và nộp hồ sơ', `${rec.name} (${rec.code})\nĐã nộp hồ sơ vào lúc ${t}`);
+    banner('warning', 'Bệnh nhân khám xong và đã nộp hồ sơ', `${rec.name} (${rec.code})\nĐã nộp hồ sơ vào lúc ${t}`, rec.code);
     logHistory('warning', rec, rec.code, `Đã nộp lúc ${t}`); feedback('warning');
+  }
+
+  // Bỏ đánh dấu đã nộp (đưa về chưa nộp hồ sơ) từ thông báo sau khi quét.
+  async function undoSubmitted() {
+    const code = state.undoCode; if (!code) return;
+    const rec = state.byCode.get(code); const name = rec?.name || code;
+    if (!confirm(`Bỏ đánh dấu ĐÃ NỘP HỒ SƠ cho ${name} (${code})?\n\nTrạng thái sẽ trở về CHƯA NỘP HỒ SƠ.`)) return;
+    let offline = false;
+    try { await rpc('unmark_submitted', withKey({ p_ma_nv: code, p_device: state.device })); }
+    catch (e) {
+      if (!(e instanceof NetError)) { banner('error', 'Không bỏ được đánh dấu', e.message); feedback('error'); return; }
+      queueAdd('unmark_submitted', code, new Date()); offline = true;      // mất mạng: lưu tạm, gửi sau
+    }
+    if (rec) rec.submittedAt = null;
+    banner('info', 'Đã bỏ đánh dấu nộp hồ sơ', `${name} (${code})\nTrạng thái: chưa nộp hồ sơ${offline ? '\n(Mất mạng: sẽ tự gửi khi có mạng.)' : ''}`);
+    logHistory('', rec, code, 'Bỏ đánh dấu nộp'); feedback('warning');
+    renderCards(); if (state.view === 'list') renderList();
   }
 
   async function extractCode(text) {
@@ -433,6 +451,7 @@
     document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => showView(b.dataset.view)));
     $('btnCamera').addEventListener('click', () => (scanning ? stopCamera() : startCamera()));
     $('btnTorch').addEventListener('click', toggleTorch);
+    $('btnUndo').addEventListener('click', undoSubmitted);
     $('manualForm').addEventListener('submit', async (e) => {
       e.preventDefault(); const v = $('manualInput').value; $('manualInput').value = ''; await handleScanned(v); $('manualInput').focus();
     });
