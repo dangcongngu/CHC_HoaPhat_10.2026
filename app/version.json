@@ -1,5 +1,5 @@
 {
-  "version": "1.1.15",
-  "url": "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.15_win-x64.zip",
-  "notes": "Xuất PDF không còn hỏng cả lô khi một file tạm bị mất (tự xuất lại, chỉ báo lỗi hồ sơ đó); tên file PDF theo khoảng STT + bảng tra cứu."
+  "version": "1.1.16",
+  "url": "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.16_win-x64.zip",
+  "notes": "In trực tiếp theo lô (nhanh hơn, không cần xuất PDF), hỗ trợ ghép 2 trang A4 trên 1 tờ A3; xuất PDF bền hơn khi file tạm bị mất."
 }
