@@ -1,5 +1,5 @@
 {
-  "version": "1.1.10",
-  "url": "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.10_win-x64.zip",
-  "notes": "Xuất PDF tự chia file (mặc định 1000 hồ sơ/file); in hàng loạt ổn định hơn với máy in mạng chậm; bỏ gộp Word."
+  "version": "1.1.14",
+  "url": "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.14_win-x64.zip",
+  "notes": "Tên file PDF ghi khoảng STT + bảng tra cứu hồ sơ nằm ở file nào; danh sách hiện ngay khi trộn dữ liệu; icon chờ nhảy múa ở vạch đích."
 }
