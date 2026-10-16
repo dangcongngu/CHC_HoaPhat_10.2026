@@ -1,5 +1,5 @@
 {
-  "version": "1.1.38",
-  "url": "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.38_win-x64.zip",
-  "notes": "Thêm web Tìm hồ sơ (số thứ tự realtime từ Check-in) + QR trên Check-in; chống mất dữ liệu khi mất mạng; Excel dự phòng; giao diện Check-out co giãn."
+  "version": "1.1.39",
+  "url": "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.39_win-x64.zip",
+  "notes": "Web Tìm hồ sơ chỉ chuyển xanh khi người tìm bấm Đã tìm thấy; thêm web Tìm hồ sơ, Excel dự phòng, chống mất dữ liệu khi mất mạng."
 }
