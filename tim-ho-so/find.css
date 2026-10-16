@@ -55,32 +55,29 @@ input[type=password], input[type=text], .search {
 .tab b { margin-left: 4px; }
 .tab.on { background: var(--blue); border-color: var(--blue-d); color: #fff; }
 
-.list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px; }
-.item { display: flex; align-items: stretch; gap: 0; border-radius: 14px; overflow: hidden; border: 1.5px solid; background: var(--card); }
+.list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; }
+.item { display: flex; align-items: stretch; border-radius: 12px; overflow: hidden; border: 1.5px solid; background: var(--card); }
 .item.todo { border-color: var(--red-line); background: var(--red-bg); }
 .item.done { border-color: var(--green-line); background: var(--green-bg); }
 .item.fresh { animation: fresh 1.6s ease-out; }
-@keyframes fresh { 0% { box-shadow: 0 0 0 0 rgba(211,47,47,.55); } 100% { box-shadow: 0 0 0 14px rgba(211,47,47,0); } }
-.stt { flex: 0 0 auto; min-width: 92px; padding: 10px 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
+@keyframes fresh { 0% { box-shadow: 0 0 0 0 rgba(211,47,47,.55); } 100% { box-shadow: 0 0 0 12px rgba(211,47,47,0); } }
+.stt { flex: 0 0 auto; min-width: 68px; padding: 6px 8px; display: flex; justify-content: center; align-items: center; color: #fff; }
 .item.todo .stt { background: var(--red); } .item.done .stt { background: var(--green); }
-.stt small { font-size: 10px; letter-spacing: .08em; opacity: .9; }
-.stt strong { font-size: 30px; line-height: 1.05; font-variant-numeric: tabular-nums; }
-.info { flex: 1; min-width: 0; padding: 10px 12px; display: flex; flex-direction: column; justify-content: center; }
-.info .nm { font-weight: 700; font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
-.info .sub { font-size: 13px; color: var(--muted); }
-.info .st { font-size: 12px; font-weight: 700; margin-top: 2px; }
-.item.todo .st { color: var(--red); } .item.done .st { color: var(--green); }
-.acts { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 8px 10px 8px 0; }
-.tick { appearance: none; border: 2px solid var(--green); background: var(--card); color: var(--green); font: inherit; font-weight: 700; font-size: 14px; padding: 8px 12px; border-radius: 12px; cursor: pointer; white-space: nowrap; }
+.stt strong { font-size: 22px; line-height: 1; font-variant-numeric: tabular-nums; }
+.info { flex: 1; min-width: 0; padding: 6px 10px; display: flex; flex-direction: column; justify-content: center; }
+.info .nm { font-weight: 700; font-size: clamp(13px, 3.8vw, 16px); line-height: 1.2; overflow-wrap: anywhere; }
+.info .sub { font-size: 12px; color: var(--muted); line-height: 1.2; margin-top: 1px; }
+.acts { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; padding: 6px 8px 6px 0; }
+.tick { appearance: none; border: 2px solid var(--green); background: var(--card); color: var(--green); font: inherit; font-weight: 700; font-size: 13px; padding: 6px 9px; border-radius: 10px; cursor: pointer; white-space: nowrap; }
 .item.done .tick { background: var(--green); color: #fff; }
 .tick:active { transform: scale(.97); }
-.x { appearance: none; border: 0; background: transparent; color: var(--muted); font-size: 13px; padding: 2px; cursor: pointer; }
+.x { appearance: none; border: 0; background: transparent; color: var(--muted); font-size: 12px; padding: 1px 4px; cursor: pointer; }
 .empty { text-align: center; color: var(--muted); padding: 28px 8px; }
 
 .toast { position: fixed; left: 50%; bottom: calc(18px + var(--safe-b)); transform: translateX(-50%); background: #1d2b3a; color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 14px; z-index: 20; max-width: 92vw; }
 
 @media (min-width: 900px) {
   .hero { padding: 26px 16px 22px; }
-  .item .stt { min-width: 112px; } .stt strong { font-size: 36px; }
+  .item .stt { min-width: 76px; } .stt strong { font-size: 24px; }
 }
 @media (max-width: 380px) { .list { grid-template-columns: 1fr; } .acts { padding-right: 6px; } }

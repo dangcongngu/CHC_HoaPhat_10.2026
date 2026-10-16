@@ -138,7 +138,7 @@
     $('heroLabel').textContent = head.found ? 'Đã tìm thấy hồ sơ' : todo.length > 1 ? `Cần tìm hồ sơ (còn ${todo.length} hồ sơ chưa tìm thấy)` : 'Cần tìm hồ sơ';
     $('heroStt').textContent = head.stt ?? '?';
     $('heroName').textContent = head.name;
-    $('heroMeta').textContent = `Mã NV: ${head.code}  •  phát lúc ${fmtHour(head.at)}${head.found ? '' : '  •  ' + waitText(head)}`;
+    $('heroMeta').textContent = `Mã NV: ${head.code}`;
     if (String(head.id) !== wasId || state.fresh.has(head.id)) { hero.dataset.id = String(head.id); if (!head.found) { hero.classList.remove('pulse'); void hero.offsetWidth; hero.classList.add('pulse'); } }
   }
 
@@ -156,11 +156,10 @@
     sortItems(rows);
     $('list').innerHTML = rows.map((x) => `
       <li class="item ${x.found ? 'done' : 'todo'}${state.fresh.has(x.id) ? ' fresh' : ''}" data-id="${x.id}">
-        <div class="stt"><small>STT</small><strong>${esc(x.stt ?? '?')}</strong></div>
+        <div class="stt"><strong>${esc(x.stt ?? '?')}</strong></div>
         <div class="info">
           <div class="nm">${esc(x.name)}</div>
-          <div class="sub">Mã NV: ${esc(x.code)} • phát lúc ${fmtHour(x.at)}</div>
-          <div class="st">${x.found ? `✓ Đã tìm thấy${x.foundAt ? ' lúc ' + fmtHour(x.foundAt) : ''}` : '● Chưa tìm thấy • ' + waitText(x)}</div>
+          <div class="sub">${esc(x.code)}</div>
         </div>
         <div class="acts">
           <button class="tick" data-act="tick">${x.found ? '✓ Đã thấy' : 'Đã tìm thấy'}</button>
