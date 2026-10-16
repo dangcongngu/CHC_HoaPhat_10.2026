@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1b4f82">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Tìm hồ sơ - Lượm Lúa</title>
+  <link rel="icon" href="../icons/icon-192.png">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="find.css">
+</head>
+<body>
+  <header class="top">
+    <img src="../icons/icon-192.png" alt="" class="logo">
+    <div class="ttl"><strong>Tìm hồ sơ</strong><span id="sub">Số thứ tự cần tìm, cập nhật trực tiếp từ Check-in</span></div>
+    <div class="conn wait" id="conn"><i></i><span id="connText">Đang kết nối</span></div>
+    <button class="icon" id="btnSound" title="Bật/tắt âm báo" aria-label="Âm báo">🔔</button>
+    <button class="icon" id="btnSettings" title="Cài đặt" aria-label="Cài đặt">⚙</button>
+  </header>
+
+  <main>
+    <!-- Cài đặt mã truy cập (chỉ hiện khi chưa có mã) -->
+    <section id="setup" class="card setup" hidden>
+      <h2>Nhập mã truy cập</h2>
+      <p>Dùng cùng mã truy cập với web nộp hồ sơ. Mã chỉ lưu trong trình duyệt của máy này.</p>
+      <input id="accessInput" type="password" autocomplete="off" placeholder="Mã truy cập" inputmode="text">
+      <input id="deviceInput" type="text" autocomplete="off" placeholder="Tên thiết bị / người tìm (ví dụ: Kho hồ sơ A)">
+      <div class="row">
+        <button class="btn primary" id="btnSave">Lưu và bắt đầu</button>
+        <button class="btn" id="btnForget">Xóa mã</button>
+      </div>
+      <p class="msg" id="setupMsg"></p>
+    </section>
+
+    <!-- Đang cần tìm: STT lớn của yêu cầu mới nhất -->
+    <section id="hero" class="hero idle" hidden>
+      <div class="hero-label" id="heroLabel">Chưa có hồ sơ cần tìm</div>
+      <div class="hero-stt" id="heroStt">—</div>
+      <div class="hero-name" id="heroName"></div>
+      <div class="hero-meta" id="heroMeta"></div>
+    </section>
+
+    <section id="listArea" hidden>
+      <div class="tabs" role="tablist">
+        <button class="tab on" data-f="todo" role="tab">Chưa tìm thấy <b id="cTodo">0</b></button>
+        <button class="tab" data-f="done" role="tab">Đã tìm thấy <b id="cDone">0</b></button>
+        <button class="tab" data-f="all" role="tab">Tất cả <b id="cAll">0</b></button>
+      </div>
+      <input id="q" class="search" type="search" placeholder="Lọc theo STT, mã NV, họ tên…" autocomplete="off">
+      <ul id="list" class="list"></ul>
+      <p class="empty" id="empty" hidden></p>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script src="../config.js"></script>
+  <script src="find.js"></script>
+</body>
+</html>
