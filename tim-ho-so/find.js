@@ -64,42 +64,27 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
   }
 
-  // ------------------------------------------------------------ âm báo (chuông "ding - dong - ding" như thông báo ở sân bay)
-  // Dùng thẻ <audio> phát file WAV tự tổng hợp: iPhone không tắt tiếng theo nút gạt im lặng như Web Audio, và phát được từ tác vụ nền sau khi đã "mở khóa".
-  const NOTES = [[783.99, 0, 1.3], [659.25, 0.55, 1.3], [523.25, 1.1, 1.9]];   // sol, mi, đô
-  function makeChimeWav() {
-    const rate = 22050; const total = 3.2; const n = Math.floor(rate * total); const data = new Float32Array(n);
-    for (const [freq, start, dur] of NOTES) {
-      for (const [mult, vol, len] of [[1, 0.5, dur], [2, 0.22, dur * 0.7], [2.76, 0.12, dur * 0.45], [5.4, 0.05, dur * 0.25]]) {
-        const from = Math.floor(start * rate); const count = Math.floor(len * rate);
-        for (let i = 0; i < count && from + i < n; i++) {
-          const t = i / rate; const env = Math.min(1, t / 0.015) * Math.exp(-4.2 * t / len);
-          data[from + i] += Math.sin(2 * Math.PI * freq * mult * t) * vol * env;
-        }
-      }
-    }
-    const buf = new ArrayBuffer(44 + n * 2); const v = new DataView(buf);
-    const w = (o, str) => [...str].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
-    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-    v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
-    for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, data[i] * 0.9)) * 32767, true);
-    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
-  }
-  let chime = null; let unlocked = false;
-  function ensureChime() { if (!chime) { chime = new Audio(makeChimeWav()); chime.preload = 'auto'; } return chime; }
+  // ------------------------------------------------------------ âm báo (tiếng chuông thông báo sân bay, 2 đoạn luân phiên: chuong1.mp3 rồi chuong2.mp3)
+  // Dùng thẻ <audio>: iPhone không tắt tiếng theo nút gạt im lặng như Web Audio, và phát được từ tác vụ nền sau khi đã "mở khóa".
+  let clips = null; let turn = 0; let unlocked = false;
+  function ensureClips() { return clips ||= ['chuong1.mp3', 'chuong2.mp3'].map((f) => { const a = new Audio(f); a.preload = 'auto'; return a; }); }
   function unlockAudio() {
     if (unlocked) return;
-    try {
-      const a = ensureChime(); a.muted = true;
-      const p = a.play();
-      const done = () => { if (a.muted) { a.pause(); a.currentTime = 0; a.muted = false; } unlocked = true; };   // đã được beep() phát thật thì không ngắt
-      if (p?.then) p.then(done).catch(() => { a.muted = false; }); else done();
-    } catch { /* không hỗ trợ */ }
+    unlocked = true;
+    for (const a of ensureClips()) {
+      try {
+        a.muted = true;
+        const done = () => { if (a.muted) { a.pause(); a.currentTime = 0; a.muted = false; } };   // đã được beep() phát thật thì không ngắt
+        const p = a.play(); if (p?.then) p.then(done).catch(() => { a.muted = false; unlocked = false; }); else done();
+      } catch { unlocked = false; }
+    }
   }
   function beep() {
     if (!state.sound) return;
     try {
-      const a = ensureChime(); a.muted = false; a.currentTime = 0;
+      const list = ensureClips(); const a = list[turn % list.length]; turn++;
+      list.forEach((x) => { x.pause(); x.currentTime = 0; });
+      a.muted = false;
       const p = a.play();
       if (p?.catch) p.catch(() => toast('Chạm vào màn hình một lần để bật âm thanh.'));
       navigator.vibrate?.([150, 80, 150]);
@@ -246,7 +231,7 @@ Tất cả thiết bị đang mở trang này đều thấy danh sách trống.`
     try { await rpc('reset_find_requests', withKey({ p_device: state.device })); toast('Đã reset danh sách tìm hồ sơ.'); }
     catch (e) { backup.forEach((x) => state.items.set(x.id, x)); render(); toast(e.message || 'Không reset được, thử lại.'); }
   });
-  $('btnSound').addEventListener('click', () => { state.sound = !state.sound; store.set('findSound', state.sound); $('btnSound').classList.toggle('off', !state.sound); toast(state.sound ? 'Đã bật âm báo' : 'Đã tắt âm báo'); if (state.sound) { unlocked = true; beep(); } });
+  $('btnSound').addEventListener('click', () => { state.sound = !state.sound; store.set('findSound', state.sound); $('btnSound').classList.toggle('off', !state.sound); toast(state.sound ? 'Đã bật âm báo' : 'Đã tắt âm báo'); if (state.sound) beep(); });
   $('btnSound').classList.toggle('off', !state.sound);
   document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === b)); state.filter = b.dataset.f; render();
