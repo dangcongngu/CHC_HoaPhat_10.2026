@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.8';
+  const APP_VERSION = '1.0.13';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -193,6 +193,9 @@
     const card = $('popupCard');
     card.className = 'popup-card ' + (POPUP_ICON[kind] ? kind : 'info');
     $('popupIcon').textContent = POPUP_ICON[kind] || 'i';
+    // thành công: mascot "like"; lỗi: mascot "hủy"; loại khác giữ ký hiệu
+    const mascot = kind === 'success' ? 'icons/mascot.png' : kind === 'error' ? 'icons/mascot-cancel.png' : '';
+    $('popupMascot').hidden = !mascot; $('popupIcon').hidden = !!mascot; if (mascot) $('popupMascot').src = mascot;
     $('popupTitle').textContent = title;
     const lines = String(detail || '').split('\n');
     const hasName = /\([A-Za-z0-9]+\)\s*$/.test(lines[0] || '');                // dòng đầu dạng "Họ tên (MÃ)"
@@ -259,11 +262,31 @@
     logHistory('warning', rec, rec.code, `Đã nộp lúc ${t}`); feedback('warning');
   }
 
+  // ------------------------------------------------------------ hộp xác nhận có mascot (thay cho confirm() của trình duyệt)
+  function askConfirm({ title, name = '', detail = '', okText = 'Xác nhận', cancelText = 'Hủy', kind = 'info', danger = false, mascot = 'ok', altText = '' }) {
+    return new Promise((resolve) => {
+      const box = $('askBox'); $('askCard').className = 'popup-card ' + kind;
+      $('askTitle').textContent = title; $('askName').textContent = name; $('askDetail').textContent = detail;
+      $('askOk').textContent = okText; $('askCancel').textContent = cancelText;
+      $('askOk').className = 'btn ' + (danger ? 'danger' : 'primary');
+      $('askMascot').src = mascot === 'cancel' ? 'icons/mascot-cancel.png' : 'icons/mascot.png';
+      $('askAlt').hidden = !altText; $('askAlt').textContent = altText;
+      let answer = '';
+      const done = (value) => { answer = value; if (box.open) box.close(); };
+      const onOk = () => done('ok'), onAlt = () => done('alt'), onCancel = () => done('');
+      const onClose = () => { $('askOk').removeEventListener('click', onOk); $('askAlt').removeEventListener('click', onAlt); $('askCancel').removeEventListener('click', onCancel); box.removeEventListener('close', onClose); box.removeEventListener('cancel', onClose); resolve(answer); };
+      $('askOk').addEventListener('click', onOk); $('askAlt').addEventListener('click', onAlt); $('askCancel').addEventListener('click', onCancel);
+      box.addEventListener('close', onClose); box.addEventListener('cancel', () => { answer = ''; });
+      box.addEventListener('click', (e) => { if (e.target === box || e.target.classList.contains('ask-wrap')) done(''); });
+      box.showModal(); (danger ? $('askCancel') : $('askOk')).focus();
+    });
+  }
+
   // Bỏ đánh dấu đã nộp (đưa về chưa nộp hồ sơ) từ thông báo sau khi quét.
   async function undoSubmitted() {
     const code = state.undoCode; if (!code) return;
     const rec = state.byCode.get(code); const name = rec?.name || code;
-    if (!confirm(`Bỏ đánh dấu ĐÃ NỘP HỒ SƠ cho ${name} (${code})?\n\nTrạng thái sẽ trở về CHƯA NỘP HỒ SƠ.`)) return;
+    if (!await askConfirm({ title: 'Bỏ đánh dấu nộp hồ sơ', name: `${name} (${code})`, detail: 'Trạng thái sẽ trở về CHƯA NỘP HỒ SƠ.', okText: 'Bỏ đánh dấu', cancelText: 'Giữ nguyên', kind: 'warning', danger: true, mascot: 'cancel' })) return;
     let offline = false;
     try { await rpc('unmark_submitted', withKey({ p_ma_nv: code, p_device: state.device })); }
     catch (e) {
@@ -368,8 +391,20 @@
     return `DanhSach_${label}_${d.getFullYear()}${part(d.getMonth() + 1)}${part(d.getDate())}_${part(d.getHours())}${part(d.getMinutes())}.${ext}`;
   }
   async function exportList() {
-    const rows = filtered();
-    const msg = $('exportMsg'); msg.hidden = false;
+    let rows = filtered();
+    const msg = $('exportMsg');
+    // Đang lọc theo ngày: hỏi xuất theo ngày (danh sách đang lọc) hay xuất tất cả
+    if ($('dateOn').checked && $('dateValue').value) {
+      const [y, m, d] = $('dateValue').value.split('-');
+      const choice = await askConfirm({
+        title: 'Xuất danh sách', name: `Đang lọc theo ngày ${d}/${m}/${y}`,
+        detail: '• Xuất theo ngày: danh sách đang lọc của ngày này.\n• Xuất tất cả: toàn bộ danh sách bệnh nhân.',
+        okText: 'Xuất theo ngày', altText: 'Xuất tất cả', cancelText: 'Hủy'
+      });
+      if (!choice) return;
+      if (choice === 'alt') rows = state.patients.slice();
+    }
+    msg.hidden = false;
     if (!rows.length) { msg.textContent = 'Không có bệnh nhân nào trong bộ lọc hiện tại để xuất.'; return; }
     const header = ['STT', 'Mã NV', 'Họ và tên', 'Trạng thái', 'Giờ khám', 'Giờ nộp hồ sơ'];
     const data = rows.map((r) => [r.stt ?? '', r.code, r.name, statusText(r), r.examinedAt ? fmtTime(r.examinedAt) : '', r.submittedAt ? fmtTime(r.submittedAt) : '']);
@@ -472,7 +507,7 @@
   async function detailAction() {
     const r = state.byCode.get(detailCode); if (!r) return;
     if (!r.submittedAt) { $('detail').close(); await checkout(r.code, 'tay'); if (state.view === 'scan') { clearQuick(); $('manualInput').focus(); } else renderList(); return; }
-    if (!confirm(`Bệnh nhân đã nộp hồ sơ lúc ${fmtTime(r.submittedAt)}.\n\nBỏ đánh dấu đã nộp cho ${r.name}?`)) return;
+    if (!await askConfirm({ title: 'Bỏ đánh dấu nộp hồ sơ', name: `${r.name} (${r.code})`, detail: `Đã nộp hồ sơ lúc ${fmtTime(r.submittedAt)}.\nTrạng thái sẽ trở về CHƯA NỘP HỒ SƠ.`, okText: 'Bỏ đánh dấu', cancelText: 'Giữ nguyên', kind: 'warning', danger: true, mascot: 'cancel' })) return;
     try {
       await rpc('unmark_submitted', withKey({ p_ma_nv: r.code, p_device: state.device }));
       r.submittedAt = null; banner('info', 'Đã bỏ đánh dấu nộp hồ sơ', `${r.name} (${r.code})`); logHistory('', r, r.code, 'Bỏ đánh dấu nộp');
@@ -589,7 +624,7 @@
   // ------------------------------------------------------------ khởi tạo
   function init() {
     fillSettings(); renderQueue(); renderHistory(); renderCards();
-    $('version').textContent = `Phiên bản ${APP_VERSION}`;
+    $('version').textContent = `Phiên bản ${APP_VERSION} • Product by Tồ Lô team`;
     $('dateValue').value = dayKey(new Date());
     document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => showView(b.dataset.view)));
     $('btnCamera').addEventListener('click', () => (scanning ? stopCamera() : startCamera()));
@@ -620,8 +655,8 @@
     $('detailClose').addEventListener('click', () => $('detail').close());
     $('detailAction').addEventListener('click', detailAction);
     $('btnSave').addEventListener('click', saveSettings);
-    $('btnLogout').addEventListener('click', () => {
-      if (!confirm('Xóa mã truy cập khỏi điện thoại này?')) return;
+    $('btnLogout').addEventListener('click', async () => {
+      if (!await askConfirm({ title: 'Xóa mã truy cập', name: 'Mã truy cập trên điện thoại này', detail: 'Bạn sẽ phải nhập lại mã để dùng tiếp.', okText: 'Xóa mã', cancelText: 'Giữ lại', kind: 'warning', danger: true })) return;
       state.access = ''; store.del('access'); state.loaded = false; state.patients = []; state.byCode.clear(); fillSettings(); renderCards(); renderList();
       setConn('', 'Chưa kết nối'); showSettingsMsg('Đã xóa mã truy cập.', false);
     });

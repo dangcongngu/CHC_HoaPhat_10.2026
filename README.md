@@ -28,3 +28,9 @@ Không có máy chủ riêng, không cần cài đặt: chỉ là các file tĩn
 - `config.js` chỉ chứa URL dự án và khóa **publishable** (công khai theo thiết kế của Supabase). **Không ghi mã truy cập vào file nào**: mã chỉ nhập trên điện thoại và lưu trong trình duyệt của máy đó (nút "Xóa mã truy cập" để gỡ).
 - Dữ liệu bệnh nhân chỉ đọc/ghi được khi có đúng mã truy cập (kiểm tra trong database).
 - Thư viện đọc QR (jsQR 1.4.0) tải từ cdn.jsdelivr.net; trình duyệt có `BarcodeDetector` (Chrome Android) dùng bộ đọc có sẵn của máy.
+
+## Trang "Tìm hồ sơ" (`tim-ho-so/`)
+Website hiển thị **trực tiếp** số thứ tự mà màn hình Check-in của app đang cần tìm hồ sơ (kèm họ tên, Mã NV) để người ở vị trí khác tìm giúp.
+- Mở bằng QR ở góc phải trên màn hình Check-in: `https://dangcongngu.github.io/CHC_HoaPhat_10.2026/tim-ho-so/` (dùng chung mã truy cập với web nộp hồ sơ; nhập một lần, máy nhớ cho các lần sau).
+- Màu **đỏ** = chưa tìm thấy, màu **xanh** = đã tìm thấy. Chỉ người đi tìm hồ sơ bấm **Đã tìm thấy** trên web mới chuyển xanh (quét QR ở Check-in vẫn tự tick phát hồ sơ nhưng không đổi màu trên web).
+- Cần chạy **một lần** file `supabase/find_requests.sql` trong Supabase SQL Editor (không đụng tới dữ liệu và mã truy cập hiện có).

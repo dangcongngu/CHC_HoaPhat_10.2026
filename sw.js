@@ -1,6 +1,6 @@
 /* Service worker: lưu sẵn giao diện để mở nhanh và vẫn mở được khi mạng yếu. Dữ liệu bệnh nhân KHÔNG được cache. */
-const CACHE = 'luom-lua-checkout-v9';
-const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'config.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
+const CACHE = 'luom-lua-checkout-v14';
+const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'config.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/mascot.png', 'icons/mascot-cancel.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

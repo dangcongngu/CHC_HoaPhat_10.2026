@@ -98,18 +98,25 @@ label input { margin-top: 4px; color: var(--text); }
 /* popup kết quả quét */
 .popup { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(8, 18, 30, .62); animation: fadein .12s ease-out; }
 .popup[hidden] { display: none; }
-.popup-card { position: relative; width: min(440px, 100%); background: #fff; border-radius: 22px; padding: 26px 20px 20px; text-align: center; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,.4); border-top: 12px solid var(--blue); animation: pop .16s ease-out; }
+.popup-card { position: relative; width: min(350px, 100%); background: #fff; border-radius: 20px; padding: 18px 16px 16px; text-align: center; overflow: hidden; box-shadow: 0 18px 50px rgba(0,0,0,.4); border-top: 10px solid var(--blue); animation: pop .16s ease-out; }
+/* hộp xác nhận có mascot */
+dialog.ask { border: 0; padding: 0; background: transparent; width: 100%; max-width: none; height: 100%; max-height: none; }
+dialog.ask::backdrop { background: rgba(8, 18, 30, .62); }
+.ask-wrap { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 18px; }
+.p-mascot { display: block; width: 84px; height: 84px; margin: 0 auto 6px; border-radius: 50%; border: 3px solid var(--blue); background: #fff; object-fit: cover; }
+.popup-card.success .p-mascot { border-color: var(--green); } .popup-card.warning .p-mascot { border-color: var(--amber); } .popup-card.error .p-mascot { border-color: var(--red); }
 .popup-card.success { border-color: var(--green); background: #f3fbf5; }
 .popup-card.warning { border-color: var(--amber); background: #fff8ec; }
 .popup-card.error { border-color: var(--red); background: #fff3f3; }
-.p-icon { width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 52px; font-weight: 800; color: #fff; background: var(--blue); line-height: 1; }
+.p-icon { width: 68px; height: 68px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 42px; font-weight: 800; color: #fff; background: var(--blue); line-height: 1; }
 .popup-card.success .p-icon { background: var(--green); } .popup-card.warning .p-icon { background: var(--amber); } .popup-card.error .p-icon { background: var(--red); }
-.p-title { font-size: 22px; font-weight: 800; line-height: 1.25; color: var(--blue); }
+.p-title { font-size: 19px; font-weight: 800; line-height: 1.25; color: var(--blue); }
 .popup-card.success .p-title { color: var(--green); } .popup-card.warning .p-title { color: var(--amber); } .popup-card.error .p-title { color: var(--red); }
-.p-name { margin-top: 10px; font-size: 22px; font-weight: 700; word-break: break-word; }
-.p-detail { margin-top: 6px; font-size: 17px; color: #3a4a5c; white-space: pre-line; word-break: break-word; }
-.p-actions { display: grid; gap: 10px; margin-top: 18px; }
-.p-actions .btn { width: 100%; font-size: 17px; min-height: 52px; }
+.p-name { margin-top: 8px; font-size: 19px; font-weight: 700; word-break: break-word; }
+.p-detail { margin-top: 5px; font-size: 15px; color: #3a4a5c; white-space: pre-line; word-break: break-word; }
+.p-actions { display: grid; gap: 8px; margin-top: 14px; }
+.p-actions .btn { width: 100%; font-size: 16px; min-height: 46px; }
+.p-mascot[hidden], .p-icon[hidden] { display: none; }
 .p-timer { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: transparent; }
 .p-timer i { display: block; height: 100%; width: 100%; background: rgba(0,0,0,.18); transform-origin: left; }
 .p-timer.run i { animation: countdown var(--dur, 2.5s) linear forwards; }
@@ -212,12 +219,12 @@ label input { margin-top: 4px; color: var(--text); }
   .sheet-body { padding: 22px; }
 
   /* popup kết quả quét lớn hơn */
-  .popup-card { width: min(520px, 100%); padding: 32px 26px 24px; }
-  .p-icon { width: 100px; height: 100px; font-size: 62px; }
-  .p-title { font-size: 28px; } .p-name { font-size: 26px; } .p-detail { font-size: 20px; }
+  .popup-card { width: min(420px, 100%); padding: 22px 22px 18px; }
+  .p-icon { width: 76px; height: 76px; font-size: 48px; } .p-mascot { width: 92px; height: 92px; }
+  .p-title { font-size: 22px; } .p-name { font-size: 21px; } .p-detail { font-size: 17px; }
   .p-actions { grid-template-columns: 1fr 1fr; }
   .p-actions .btn:only-child { grid-column: 1 / -1; }
-  .p-actions .btn { min-height: 58px; font-size: 19px; }
+  .p-actions .btn { min-height: 50px; font-size: 17px; }
 }
 
 /* máy tính bảng ngang / màn hình lớn (>= 1000px) */
@@ -245,7 +252,7 @@ label input { margin-top: 4px; color: var(--text); }
   .banner .b-title { font-size: 17px; }
   .popup { padding: 8px; align-items: flex-start; overflow-y: auto; }
   .popup-card { padding: 14px 16px 14px; }
-  .p-icon { width: 56px; height: 56px; font-size: 34px; margin-bottom: 4px; }
+  .p-icon { width: 52px; height: 52px; font-size: 32px; margin-bottom: 4px; } .p-mascot { width: 60px; height: 60px; margin-bottom: 4px; }
   .p-title { font-size: 18px; } .p-name { font-size: 18px; margin-top: 4px; } .p-detail { font-size: 15px; }
   .p-actions { grid-template-columns: 1fr 1fr; margin-top: 10px; } .p-actions .btn { min-height: 44px; font-size: 15px; }
   .sheet { max-height: 94vh; overflow-y: auto; }
