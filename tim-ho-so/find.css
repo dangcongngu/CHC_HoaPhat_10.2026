@@ -74,6 +74,9 @@ input[type=password], input[type=text], .search {
 .item.done .tick { background: var(--green); color: #fff; }
 .tick:active { transform: scale(.97); }
 .x { appearance: none; border: 0; background: transparent; color: var(--muted); font-size: 12px; padding: 1px 4px; cursor: pointer; }
+.bar { display: flex; gap: 8px; align-items: flex-start; }
+.bar .search { flex: 1; min-width: 0; }
+.btn.reset { padding: 11px 12px; white-space: nowrap; color: var(--red); border-color: var(--red-line); background: var(--card); }
 .empty { text-align: center; color: var(--muted); padding: 28px 8px; }
 
 .toast { position: fixed; left: 50%; bottom: calc(18px + var(--safe-b)); transform: translateX(-50%); background: #1d2b3a; color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 14px; z-index: 20; max-width: 92vw; }

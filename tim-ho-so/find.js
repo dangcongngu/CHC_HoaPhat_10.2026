@@ -64,20 +64,32 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
   }
 
-  // ------------------------------------------------------------ âm báo
+  // ------------------------------------------------------------ âm báo (chuông "ding - dong - ding" như thông báo ở sân bay)
   let audioCtx;
+  function unlockAudio() {
+    try { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch { /* không hỗ trợ */ }
+  }
+  function bell(freq, start, len) {
+    // Chuông: tiếng chính + các họa âm tắt dần, tạo âm sắc trong và ngân như chuông thông báo
+    [[1, 0.5, len], [2, 0.22, len * 0.7], [2.76, 0.12, len * 0.45], [5.4, 0.05, len * 0.25]].forEach(([mult, vol, dur]) => {
+      const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = freq * mult;
+      const t = audioCtx.currentTime + start;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + dur + 0.05);
+    });
+  }
   function beep() {
     if (!state.sound) return;
     try {
-      audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
-      [[880, 0], [1175, 0.16]].forEach(([f, s]) => {
-        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-        o.frequency.value = f; g.gain.value = 0.2; o.connect(g); g.connect(audioCtx.destination);
-        const t = audioCtx.currentTime + s; o.start(t); o.stop(t + 0.14);
-      });
-      navigator.vibrate?.(120);
+      unlockAudio();
+      bell(783.99, 0, 1.3);      // sol
+      bell(659.25, 0.55, 1.3);   // mi
+      bell(523.25, 1.1, 1.8);    // đô
+      navigator.vibrate?.([150, 80, 150]);
     } catch { /* thiết bị không hỗ trợ */ }
   }
+  document.addEventListener('pointerdown', unlockAudio, { once: true });   // trình duyệt chỉ cho phát tiếng sau khi người dùng chạm vào trang
 
   // ------------------------------------------------------------ dữ liệu
   const toItem = (d) => ({
@@ -208,7 +220,17 @@
   });
   $('btnForget').addEventListener('click', () => { store.del('access'); state.access = ''; clearTimeout(timer); setConn('wait', 'Chưa có mã'); showSetup(true); });
   $('btnSettings').addEventListener('click', () => { clearTimeout(timer); showSetup(true); });
-  $('btnSound').addEventListener('click', () => { state.sound = !state.sound; store.set('findSound', state.sound); $('btnSound').classList.toggle('off', !state.sound); toast(state.sound ? 'Đã bật âm báo' : 'Đã tắt âm báo'); if (state.sound) beep(); });
+  $('btnReset').addEventListener('click', async () => {
+    const n = state.items.size;
+    if (!confirm(n ? `Xóa toàn bộ ${n} hồ sơ trong danh sách để bắt đầu danh sách mới?
+Tất cả thiết bị đang mở trang này đều thấy danh sách trống.` : 'Danh sách đang trống.')) return;
+    if (!n) return;
+    const backup = [...state.items.values()];
+    state.items.clear(); render();
+    try { await rpc('reset_find_requests', withKey({ p_device: state.device })); toast('Đã reset danh sách tìm hồ sơ.'); }
+    catch (e) { backup.forEach((x) => state.items.set(x.id, x)); render(); toast(e.message || 'Không reset được, thử lại.'); }
+  });
+  $('btnSound').addEventListener('click', () => { state.sound = !state.sound; store.set('findSound', state.sound); $('btnSound').classList.toggle('off', !state.sound); toast(state.sound ? 'Đã bật âm báo' : 'Đã tắt âm báo'); if (state.sound) { unlockAudio(); beep(); } });
   $('btnSound').classList.toggle('off', !state.sound);
   document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x === b)); state.filter = b.dataset.f; render();
