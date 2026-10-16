@@ -114,7 +114,7 @@
   let timer;
   async function tick() {
     clearTimeout(timer);
-    let next = document.hidden ? 8000 : Math.max(1, CFG.findPollSeconds || 2) * 1000;
+    let next = document.hidden ? 5000 : Math.max(0.5, CFG.findPollSeconds || 1) * 1000;   // hỏi máy chủ mỗi giây để STT hiện gần như tức thì
     try {
       const snap = await rpc('get_find_requests', withKey({ p_since: state.cursor }));
       const changed = apply(snap.rows || []);

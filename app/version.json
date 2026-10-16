@@ -1,5 +1,5 @@
 {
-  "version": "1.1.39",
-  "url": "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.39_win-x64.zip",
-  "notes": "Web Tìm hồ sơ chỉ chuyển xanh khi người tìm bấm Đã tìm thấy; thêm web Tìm hồ sơ, Excel dự phòng, chống mất dữ liệu khi mất mạng."
+    "version":  "1.1.40",
+    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.40_win-x64.zip",
+    "notes":  "Phát số thứ tự lên web Tìm hồ sơ nhanh hơn (gần như tức thì)."
 }
