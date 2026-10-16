@@ -135,7 +135,7 @@
     if (!head) { hero.className = 'hero idle'; $('heroLabel').textContent = 'Chưa có hồ sơ cần tìm'; $('heroStt').textContent = '—'; $('heroName').textContent = ''; $('heroMeta').textContent = 'Khi Check-in tìm một hồ sơ, số thứ tự sẽ hiện ở đây.'; return; }
     const wasId = hero.dataset.id;
     hero.className = 'hero ' + (head.found ? 'done' : 'todo');
-    $('heroLabel').textContent = head.found ? 'Đã tìm thấy hồ sơ' : todo.length > 1 ? `Cần tìm hồ sơ (còn ${todo.length} hồ sơ chưa tìm thấy)` : 'Cần tìm hồ sơ';
+    $('heroLabel').innerHTML = head.found ? 'Đã tìm thấy hồ sơ' : 'Cần tìm hồ sơ' + (todo.length > 1 ? `<span class="hero-rest">Còn ${todo.length} hồ sơ chưa tìm thấy</span>` : '');
     $('heroStt').textContent = head.stt ?? '?';
     $('heroName').textContent = head.name;
     $('heroMeta').textContent = `Mã NV: ${head.code}`;

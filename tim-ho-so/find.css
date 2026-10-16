@@ -42,6 +42,8 @@ input[type=password], input[type=text], .search {
 .hero.idle { background: var(--card); border-color: var(--line); }
 .hero-label { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .hero.todo .hero-label { color: var(--red); } .hero.done .hero-label { color: var(--green); }
+.hero-rest { display: block; margin-top: 3px; font-size: 13px; letter-spacing: .02em; text-transform: none; color: #b26a00; }
+@media (prefers-color-scheme: dark) { .hero-rest { color: #ffb74d; } }
 .hero-stt { font-size: clamp(64px, 20vw, 168px); font-weight: 800; line-height: 1.02; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--muted); }
 .hero.todo .hero-stt { color: var(--red); } .hero.done .hero-stt { color: var(--green); }
 .hero-name { font-size: clamp(20px, 5vw, 34px); font-weight: 700; }
@@ -61,7 +63,7 @@ input[type=password], input[type=text], .search {
 .item.done { border-color: var(--green-line); background: var(--green-bg); }
 .item.fresh { animation: fresh 1.6s ease-out; }
 @keyframes fresh { 0% { box-shadow: 0 0 0 0 rgba(211,47,47,.55); } 100% { box-shadow: 0 0 0 12px rgba(211,47,47,0); } }
-.stt { flex: 0 0 auto; min-width: 68px; padding: 6px 8px; display: flex; justify-content: center; align-items: center; color: #fff; }
+.stt { flex: 0 0 84px; width: 84px; padding: 6px 8px; display: flex; justify-content: center; align-items: center; color: #fff; }
 .item.todo .stt { background: var(--red); } .item.done .stt { background: var(--green); }
 .stt strong { font-size: 22px; line-height: 1; font-variant-numeric: tabular-nums; }
 .info { flex: 1; min-width: 0; padding: 6px 10px; display: flex; flex-direction: column; justify-content: center; }
@@ -78,6 +80,6 @@ input[type=password], input[type=text], .search {
 
 @media (min-width: 900px) {
   .hero { padding: 26px 16px 22px; }
-  .item .stt { min-width: 76px; } .stt strong { font-size: 24px; }
+  .stt strong { font-size: 24px; }
 }
 @media (max-width: 380px) { .list { grid-template-columns: 1fr; } .acts { padding-right: 6px; } }
