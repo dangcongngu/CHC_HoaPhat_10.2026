@@ -352,13 +352,21 @@
       waiting: p.filter((x) => x.examinedAt && !x.submittedAt).length, check: p.filter((x) => x.submittedAt && !x.examinedAt).length
     };
   }
+  /** Dòng "Nghề nghiệp a • Định kỳ b" của một nhóm (đã khám, đã nộp...) so với toàn danh sách; rỗng nếu không có cột Loại BN. */
+  function loaiLine(group) {
+    const all = loaiStats(state.patients); if (!all.length) return '';
+    const g = loaiStats(group); const n = (v) => v.toLocaleString('vi-VN');
+    return all.map((x) => { const c = (g.find((y) => y.name === x.name) || { total: 0 }).total; return x.name === 'Chưa phân loại' && !c ? '' : `${x.name === LOAI_NN ? 'Nghề nghiệp' : x.name === LOAI_DK ? 'Định kỳ' : 'Khác'} <b>${n(c)}</b>`; }).filter(Boolean).join(' • ');
+  }
   function renderCards() {
     const s = stats();
+    const P = state.patients;
+    const withLoai = (text, group) => { const l = loaiLine(group); return l ? `${text || '&nbsp;'}<br>${l}` : text; };
     const pct = (a, b) => (b ? `${(a * 100 / b).toFixed(1).replace(/\.0$/, '')}%` : '');
     const card = (cls, title, val, sub, wide = '') => `<div class="card ${cls} ${wide}"><div class="c-title">${title}</div><div class="c-val">${val.toLocaleString('vi-VN')}</div><div class="c-sub">${sub || '&nbsp;'}</div></div>`;
     $('cards').innerHTML =
-      card('', 'Tổng danh sách', s.total, totalSub(state.patients)) + card('', 'Đã khám', s.examined, pct(s.examined, s.total) + ' tổng danh sách') +
-      card('green', 'Đã nộp hồ sơ', s.submitted, s.examined ? pct(s.submitted, s.examined) + ' số đã khám' : '') + card('amber', 'Chờ nộp hồ sơ', s.waiting, s.waiting ? 'đã khám, chưa nộp' : 'không còn hồ sơ chờ') +
+      card('', 'Tổng danh sách', s.total, totalSub(state.patients)) + card('', 'Đã khám', s.examined, withLoai(pct(s.examined, s.total) + ' tổng danh sách', P.filter((x) => x.examinedAt))) +
+      card('green', 'Đã nộp hồ sơ', s.submitted, withLoai(s.examined ? pct(s.submitted, s.examined) + ' số đã khám' : '', P.filter((x) => x.submittedAt))) + card('amber', 'Chờ nộp hồ sơ', s.waiting, withLoai(s.waiting ? 'đã khám, chưa nộp' : 'không còn hồ sơ chờ', P.filter((x) => x.examinedAt && !x.submittedAt))) +
       card('red', 'Nộp nhưng chưa ghi nhận khám', s.check, s.check ? 'cần kiểm tra lại' : 'không có trường hợp lệch', 'wide');
   }
 
