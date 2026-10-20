@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.13';
+  const APP_VERSION = '1.0.14';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -100,10 +100,31 @@
   }
 
   // ------------------------------------------------------------ dữ liệu
+  const LOAI_NN = 'Khám Nghề Nghiệp'; const LOAI_DK = 'Khám Định Kỳ';
+  function normLoai(v) {
+    if (!v || !String(v).trim()) return '';
+    const k = fold(v).replace(/\s+/g, '');
+    return k.includes('nghenghiep') ? LOAI_NN : k.includes('dinhky') ? LOAI_DK : String(v).trim();
+  }
+  const loaiShort = (r) => (r.loai === LOAI_NN ? 'Nghề nghiệp' : r.loai === LOAI_DK ? 'Định kỳ' : r.loai || '');
+  /** Thống kê theo Loại BN: [{ name, total, examined, submitted }] (chỉ khi danh sách có cột Loại BN). */
+  function loaiStats(list) {
+    if (!list.some((x) => x.loai)) return [];
+    const groups = [[LOAI_NN, (x) => x.loai === LOAI_NN], [LOAI_DK, (x) => x.loai === LOAI_DK], ['Chưa phân loại', (x) => x.loai !== LOAI_NN && x.loai !== LOAI_DK]];
+    return groups.map(([name, test]) => { const g = list.filter(test); return { name, total: g.length, examined: g.filter((x) => x.examinedAt).length, submitted: g.filter((x) => x.submittedAt).length }; }).filter((g) => g.total > 0);
+  }
+  /** Chú thích dưới ô "Tổng danh sách": số bệnh nhân từng loại (chỉ hiện khi danh sách có cột Loại BN). */
+  function totalSub(list) {
+    const nn = list.filter((x) => x.loai === LOAI_NN).length; const dk = list.filter((x) => x.loai === LOAI_DK).length; const other = list.filter((x) => !x.loai || (x.loai !== LOAI_NN && x.loai !== LOAI_DK)).length;
+    if (nn + dk === 0) return 'bệnh nhân';
+    const n = (v) => v.toLocaleString('vi-VN');
+    return `bệnh nhân<br>${LOAI_NN}: <b>${n(nn)}</b><br>${LOAI_DK}: <b>${n(dk)}</b>` + (other ? `<br>Chưa phân loại: <b>${n(other)}</b>` : '');
+  }
+
   function toRec(d) {
     const rec = {
       code: String(d.ma_nv || '').toUpperCase(), stt: d.stt, name: d.ho_ten || '', gender: d.gioi_tinh, dob: d.ngay_sinh, company: d.cong_ty, cccd: d.cccd,
-      extra: d.extra || {}, examinedAt: d.examined_at ? new Date(d.examined_at) : null, submittedAt: d.submitted_at ? new Date(d.submitted_at) : null
+      loai: normLoai(d.loai_bn), extra: d.extra || {}, examinedAt: d.examined_at ? new Date(d.examined_at) : null, submittedAt: d.submitted_at ? new Date(d.submitted_at) : null
     };
     rec.key = fold(`${rec.code}|${rec.name}|${rec.stt ?? ''}`);
     return rec;
@@ -116,7 +137,7 @@
       const next = toRec(d);
       const cur = state.byCode.get(next.code);
       if (!cur) { state.patients.push(next); state.byCode.set(next.code, next); added = true; continue; }
-      const same = cur.name === next.name && cur.stt === next.stt && +cur.examinedAt === +next.examinedAt && +cur.submittedAt === +next.submittedAt;
+      const same = cur.name === next.name && cur.stt === next.stt && cur.loai === next.loai && +cur.examinedAt === +next.examinedAt && +cur.submittedAt === +next.submittedAt;
       if (same) continue;
       Object.assign(cur, next); changed = true;
     }
@@ -336,7 +357,7 @@
     const pct = (a, b) => (b ? `${(a * 100 / b).toFixed(1).replace(/\.0$/, '')}%` : '');
     const card = (cls, title, val, sub, wide = '') => `<div class="card ${cls} ${wide}"><div class="c-title">${title}</div><div class="c-val">${val.toLocaleString('vi-VN')}</div><div class="c-sub">${sub || '&nbsp;'}</div></div>`;
     $('cards').innerHTML =
-      card('', 'Tổng danh sách', s.total, 'bệnh nhân') + card('', 'Đã khám', s.examined, pct(s.examined, s.total) + ' tổng danh sách') +
+      card('', 'Tổng danh sách', s.total, totalSub(state.patients)) + card('', 'Đã khám', s.examined, pct(s.examined, s.total) + ' tổng danh sách') +
       card('green', 'Đã nộp hồ sơ', s.submitted, s.examined ? pct(s.submitted, s.examined) + ' số đã khám' : '') + card('amber', 'Chờ nộp hồ sơ', s.waiting, s.waiting ? 'đã khám, chưa nộp' : 'không còn hồ sơ chờ') +
       card('red', 'Nộp nhưng chưa ghi nhận khám', s.check, s.check ? 'cần kiểm tra lại' : 'không có trường hợp lệch', 'wide');
   }
@@ -369,13 +390,14 @@
       const day = $('dateValue').value;
       const ex = state.patients.filter((r) => r.examinedAt && dayKey(r.examinedAt) === day).length;
       const sub = state.patients.filter((r) => r.submittedAt && dayKey(r.submittedAt) === day).length;
-      const [y, m, d] = day.split('-'); $('dayInfo').textContent = `Ngày ${d}/${m}/${y}: đã khám ${ex.toLocaleString('vi-VN')} • đã nộp hồ sơ ${sub.toLocaleString('vi-VN')}`;
+      const [y, m, d] = day.split('-'); const byLoai = (field) => { const g = loaiStats(state.patients.filter((r) => r[field] && dayKey(r[field]) === day)); return g.length ? ` (${g.map((x) => `${x.name === LOAI_NN ? 'Nghề nghiệp' : x.name === LOAI_DK ? 'Định kỳ' : 'Khác'} ${x.total.toLocaleString('vi-VN')}`).join(' • ')})` : ''; };
+      $('dayInfo').textContent = `Ngày ${d}/${m}/${y}: đã khám ${ex.toLocaleString('vi-VN')}${byLoai('examinedAt')} • đã nộp hồ sơ ${sub.toLocaleString('vi-VN')}${byLoai('submittedAt')}`;
     } else $('dayInfo').textContent = '';
     $('list').innerHTML = shown.map((r) => {
       const cls = r.submittedAt ? 'submitted' : r.examinedAt ? 'waiting' : '';
       const chips = (r.examinedAt ? `<span class="chip ex">✓ Khám ${fmtHour(r.examinedAt)}</span>` : '<span class="chip">Chưa đến khám</span>') +
         (r.submittedAt ? `<span class="chip sub">✓ Nộp ${fmtTime(r.submittedAt)}</span>` + (r.examinedAt ? '' : '<span class="chip wait">Chưa ghi nhận khám</span>') : r.examinedAt ? '<span class="chip wait">Chờ nộp hồ sơ</span>' : '');
-      return `<li class="item ${cls}" data-code="${esc(r.code)}"><div class="name">${esc(r.name)}</div><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}</div><div class="chips">${chips}</div></li>`;
+      return `<li class="item ${cls}" data-code="${esc(r.code)}"><div class="name">${esc(r.name)}</div><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}${r.loai ? ' • ' + esc(loaiShort(r)) : ''}</div><div class="chips">${chips}</div></li>`;
     }).join('');
     $('btnMore').hidden = rows.length <= shown.length;
   }
@@ -406,15 +428,22 @@
     }
     msg.hidden = false;
     if (!rows.length) { msg.textContent = 'Không có bệnh nhân nào trong bộ lọc hiện tại để xuất.'; return; }
-    const header = ['STT', 'Mã NV', 'Họ và tên', 'Trạng thái', 'Giờ khám', 'Giờ nộp hồ sơ'];
-    const data = rows.map((r) => [r.stt ?? '', r.code, r.name, statusText(r), r.examinedAt ? fmtTime(r.examinedAt) : '', r.submittedAt ? fmtTime(r.submittedAt) : '']);
+    const header = ['STT', 'Mã NV', 'Họ và tên', 'Loại BN', 'Trạng thái', 'Giờ khám', 'Giờ nộp hồ sơ'];
+    const data = rows.map((r) => [r.stt ?? '', r.code, r.name, r.loai || '', statusText(r), r.examinedAt ? fmtTime(r.examinedAt) : '', r.submittedAt ? fmtTime(r.submittedAt) : '']);
     msg.textContent = 'Đang tạo file...';
     let blob; let name;
     try {
       if (!window.XLSX) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
       const ws = window.XLSX.utils.aoa_to_sheet([header, ...data]);
-      ws['!cols'] = [{ wch: 7 }, { wch: 14 }, { wch: 28 }, { wch: 28 }, { wch: 19 }, { wch: 19 }];
+      ws['!cols'] = [{ wch: 7 }, { wch: 14 }, { wch: 28 }, { wch: 18 }, { wch: 28 }, { wch: 19 }, { wch: 19 }];
       const wb = window.XLSX.utils.book_new(); window.XLSX.utils.book_append_sheet(wb, ws, 'Danh sach');
+      const ls = loaiStats(rows);   // thống kê theo Loại BN của danh sách đang xuất
+      if (ls.length) {
+        const total = ls.reduce((a, x) => ({ t: a.t + x.total, e: a.e + x.examined, s: a.s + x.submitted }), { t: 0, e: 0, s: 0 });
+        const st = window.XLSX.utils.aoa_to_sheet([['Loại BN', 'Số bệnh nhân', 'Đã khám', 'Đã nộp hồ sơ'], ...ls.map((x) => [x.name, x.total, x.examined, x.submitted]), ['Tổng cộng', total.t, total.e, total.s]]);
+        st['!cols'] = [{ wch: 20 }, { wch: 14 }, { wch: 12 }, { wch: 16 }];
+        window.XLSX.utils.book_append_sheet(wb, st, 'Thong ke Loai BN');
+      }
       blob = new Blob([window.XLSX.write(wb, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       name = exportName('xlsx');
     } catch {
@@ -450,7 +479,7 @@
     const cls = r.submittedAt ? 'submitted' : r.examinedAt ? 'waiting' : '';
     const chips = (r.examinedAt ? `<span class="chip ex">✓ Khám ${fmtHour(r.examinedAt)}</span>` : '<span class="chip">Chưa đến khám</span>') +
       (r.submittedAt ? `<span class="chip sub">✓ Nộp ${fmtTime(r.submittedAt)}</span>` + (r.examinedAt ? '' : '<span class="chip wait">Chưa ghi nhận khám</span>') : r.examinedAt ? '<span class="chip wait">Chờ nộp hồ sơ</span>' : '');
-    return `<li class="item ${cls}" data-code="${esc(r.code)}"><div class="name">${esc(r.name)}</div><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}</div><div class="chips">${chips}</div></li>`;
+    return `<li class="item ${cls}" data-code="${esc(r.code)}"><div class="name">${esc(r.name)}</div><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}${r.loai ? ' • ' + esc(loaiShort(r)) : ''}</div><div class="chips">${chips}</div></li>`;
   }
   function renderQuick() {
     const text = $('manualInput').value;
