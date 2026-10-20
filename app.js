@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.14';
+  const APP_VERSION = '1.0.15';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -100,25 +100,31 @@
   }
 
   // ------------------------------------------------------------ dữ liệu
-  const LOAI_NN = 'Khám Nghề Nghiệp'; const LOAI_DK = 'Khám Định Kỳ';
+  const LOAI_NN = 'Khám Nghề Nghiệp'; const LOAI_DK = 'Khám Định Kỳ'; const LOAI_BOTH = LOAI_NN + ' + ' + LOAI_DK; const LOAI_NONE = 'Chưa phân loại';
   function normLoai(v) {
     if (!v || !String(v).trim()) return '';
     const k = fold(v).replace(/\s+/g, '');
-    return k.includes('nghenghiep') ? LOAI_NN : k.includes('dinhky') ? LOAI_DK : String(v).trim();
+    const nn = k.includes('nghenghiep'); const dk = k.includes('dinhky');
+    return nn && dk ? LOAI_BOTH : nn ? LOAI_NN : dk ? LOAI_DK : String(v).trim();
   }
-  const loaiShort = (r) => (r.loai === LOAI_NN ? 'Nghề nghiệp' : r.loai === LOAI_DK ? 'Định kỳ' : r.loai || '');
+  const loaiName = (name) => (name === LOAI_NN ? 'Nghề nghiệp' : name === LOAI_DK ? 'Định kỳ' : name === LOAI_BOTH ? 'Cả hai' : name === LOAI_NONE ? 'Chưa phân loại' : name);
+  const loaiShort = (r) => (r.loai === LOAI_BOTH ? 'Nghề nghiệp + Định kỳ' : loaiName(r.loai || ''));
   /** Thống kê theo Loại BN: [{ name, total, examined, submitted }] (chỉ khi danh sách có cột Loại BN). */
   function loaiStats(list) {
     if (!list.some((x) => x.loai)) return [];
-    const groups = [[LOAI_NN, (x) => x.loai === LOAI_NN], [LOAI_DK, (x) => x.loai === LOAI_DK], ['Chưa phân loại', (x) => x.loai !== LOAI_NN && x.loai !== LOAI_DK]];
+    const known = [LOAI_NN, LOAI_DK, LOAI_BOTH];
+    const groups = [[LOAI_NN, (x) => x.loai === LOAI_NN], [LOAI_DK, (x) => x.loai === LOAI_DK], [LOAI_BOTH, (x) => x.loai === LOAI_BOTH], [LOAI_NONE, (x) => !known.includes(x.loai)]];
     return groups.map(([name, test]) => { const g = list.filter(test); return { name, total: g.length, examined: g.filter((x) => x.examinedAt).length, submitted: g.filter((x) => x.submittedAt).length }; }).filter((g) => g.total > 0);
   }
   /** Chú thích dưới ô "Tổng danh sách": số bệnh nhân từng loại (chỉ hiện khi danh sách có cột Loại BN). */
   function totalSub(list) {
-    const nn = list.filter((x) => x.loai === LOAI_NN).length; const dk = list.filter((x) => x.loai === LOAI_DK).length; const other = list.filter((x) => !x.loai || (x.loai !== LOAI_NN && x.loai !== LOAI_DK)).length;
-    if (nn + dk === 0) return 'bệnh nhân';
+    const ls = loaiStats(list);
+    if (!ls.length) return 'bệnh nhân';
     const n = (v) => v.toLocaleString('vi-VN');
-    return `bệnh nhân<br>${LOAI_NN}: <b>${n(nn)}</b><br>${LOAI_DK}: <b>${n(dk)}</b>` + (other ? `<br>Chưa phân loại: <b>${n(other)}</b>` : '');
+    // Cả hai chỉ hiện khi có; Chưa phân loại chỉ hiện khi có (loaiStats đã lọc nhóm rỗng, nhưng luôn hiện 2 loại chính)
+    const main = [LOAI_NN, LOAI_DK].map((name) => ({ name, total: (ls.find((x) => x.name === name) || { total: 0 }).total }));
+    const extra = ls.filter((x) => x.name === LOAI_BOTH || x.name === LOAI_NONE);
+    return `bệnh nhân<br>` + [...main, ...extra].map((x) => `${x.name === LOAI_BOTH ? 'Khám cả hai loại' : x.name}: <b>${n(x.total)}</b>`).join('<br>');
   }
 
   function toRec(d) {
@@ -356,7 +362,7 @@
   function loaiLine(group) {
     const all = loaiStats(state.patients); if (!all.length) return '';
     const g = loaiStats(group); const n = (v) => v.toLocaleString('vi-VN');
-    return all.map((x) => { const c = (g.find((y) => y.name === x.name) || { total: 0 }).total; return x.name === 'Chưa phân loại' && !c ? '' : `${x.name === LOAI_NN ? 'Nghề nghiệp' : x.name === LOAI_DK ? 'Định kỳ' : 'Khác'} <b>${n(c)}</b>`; }).filter(Boolean).join(' • ');
+    return all.map((x) => { const c = (g.find((y) => y.name === x.name) || { total: 0 }).total; return x.name === LOAI_NONE && !c ? '' : `${loaiName(x.name)} <b>${n(c)}</b>`; }).filter(Boolean).join(' • ');
   }
   function renderCards() {
     const s = stats();
@@ -398,7 +404,7 @@
       const day = $('dateValue').value;
       const ex = state.patients.filter((r) => r.examinedAt && dayKey(r.examinedAt) === day).length;
       const sub = state.patients.filter((r) => r.submittedAt && dayKey(r.submittedAt) === day).length;
-      const [y, m, d] = day.split('-'); const byLoai = (field) => { const g = loaiStats(state.patients.filter((r) => r[field] && dayKey(r[field]) === day)); return g.length ? ` (${g.map((x) => `${x.name === LOAI_NN ? 'Nghề nghiệp' : x.name === LOAI_DK ? 'Định kỳ' : 'Khác'} ${x.total.toLocaleString('vi-VN')}`).join(' • ')})` : ''; };
+      const [y, m, d] = day.split('-'); const byLoai = (field) => { const g = loaiStats(state.patients.filter((r) => r[field] && dayKey(r[field]) === day)); return g.length ? ` (${g.map((x) => `${loaiName(x.name)} ${x.total.toLocaleString('vi-VN')}`).join(' • ')})` : ''; };
       $('dayInfo').textContent = `Ngày ${d}/${m}/${y}: đã khám ${ex.toLocaleString('vi-VN')}${byLoai('examinedAt')} • đã nộp hồ sơ ${sub.toLocaleString('vi-VN')}${byLoai('submittedAt')}`;
     } else $('dayInfo').textContent = '';
     $('list').innerHTML = shown.map((r) => {
