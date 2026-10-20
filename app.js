@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.15';
+  const APP_VERSION = '1.0.16';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -104,7 +104,7 @@
   function normLoai(v) {
     if (!v || !String(v).trim()) return '';
     const k = fold(v).replace(/\s+/g, '');
-    const nn = k.includes('nghenghiep'); const dk = k.includes('dinhky');
+    const nn = k.includes('nghenghiep'); const dk = k.includes('dinhky') || k.includes('dinhki');
     return nn && dk ? LOAI_BOTH : nn ? LOAI_NN : dk ? LOAI_DK : String(v).trim();
   }
   const loaiName = (name) => (name === LOAI_NN ? 'Nghề nghiệp' : name === LOAI_DK ? 'Định kỳ' : name === LOAI_BOTH ? 'Cả hai' : name === LOAI_NONE ? 'Chưa phân loại' : name);
