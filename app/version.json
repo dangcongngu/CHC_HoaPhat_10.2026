@@ -1,5 +1,5 @@
 {
-    "version":  "1.1.52",
-    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.52_win-x64.zip",
-    "notes":  "Check-out: thẻ màu phân loại BN khi quét, cảnh báo đủ 2 bộ hồ sơ cho nhân viên khám cả hai loại."
+    "version":  "1.1.54",
+    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.54_win-x64.zip",
+    "notes":  "Giao diện Check-in/Check-out gọn hơn: nút thao tác lên tiêu đề, danh sách cao hơn, lịch sử không xuống dòng."
 }
