@@ -258,3 +258,10 @@ dialog.ask::backdrop { background: rgba(8, 18, 30, .62); }
   .p-actions { grid-template-columns: 1fr 1fr; margin-top: 10px; } .p-actions .btn { min-height: 44px; font-size: 15px; }
   .sheet { max-height: 94vh; overflow-y: auto; }
 }
+
+/* ---- Thẻ phân loại BN (Khám Nghề Nghiệp / Khám Định Kỳ / cả hai) */
+.loai-nn { --tag: #008080; } .loai-dk { --tag: #4f46e5; } .loai-both { --tag: #d62864; } .loai-other { --tag: #6e7887; }
+.p-tag, .b-tag { display: inline-block; margin: 6px auto 2px; padding: 6px 16px; border-radius: 999px; background: var(--tag); color: #fff; font-weight: 800; font-size: 14px; letter-spacing: .02em; }
+.p-tag[hidden], .b-tag[hidden] { display: none; }
+.p-tag.loai-both, .b-tag.loai-both { font-size: 15px; box-shadow: 0 0 0 3px rgba(214,40,100,.25); }
+.chip.loai { background: var(--tag); color: #fff; font-weight: 700; }

@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.17';
+  const APP_VERSION = '1.0.18';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -108,6 +108,7 @@
     return nn && dk ? LOAI_BOTH : nn ? LOAI_NN : dk ? LOAI_DK : String(v).trim();
   }
   const loaiName = (name) => (name === LOAI_NN ? 'Nghề nghiệp' : name === LOAI_DK ? 'Định kỳ' : name === LOAI_BOTH ? 'Cả hai' : name === LOAI_NONE ? 'Chưa phân loại' : name);
+  const loaiChip = (r) => { const t = loaiTag(r.loai); return t ? `<span class="chip loai ${t.cls}">${esc(r.loai === LOAI_BOTH ? '⚠ Cả hai loại' : loaiName(r.loai))}</span>` : ''; };
   const loaiShort = (r) => (r.loai === LOAI_BOTH ? 'Nghề nghiệp + Định kỳ' : loaiName(r.loai || ''));
   /** Thống kê theo Loại BN: [{ name, total, examined, submitted }] (chỉ khi danh sách có cột Loại BN). */
   function loaiStats(list) {
@@ -207,9 +208,22 @@
   }
 
   // ------------------------------------------------------------ nghiệp vụ nộp hồ sơ
+  /** Thẻ phân loại BN: { text, cls } hoặc null. Màu: nghề nghiệp xanh ngọc, định kỳ xanh chàm, cả hai đỏ tươi. */
+  function loaiTag(loai) {
+    if (!loai) return null;
+    if (loai === LOAI_BOTH) return { text: 'KHÁM CẢ HAI LOẠI: NGHỀ NGHIỆP + ĐỊNH KỲ', cls: 'loai-both' };
+    return { text: String(loai).toUpperCase(), cls: loai === LOAI_NN ? 'loai-nn' : loai === LOAI_DK ? 'loai-dk' : 'loai-other' };
+  }
+  /** Loại BN của bệnh nhân ở dòng đầu "Họ tên (MÃ)" của nội dung thông báo. */
+  function loaiOfDetail(detail) {
+    const m = /\(([A-Za-z0-9]+)\)\s*$/.exec(String(detail || '').split('\n')[0] || '');
+    return m ? (state.byCode.get(m[1].toUpperCase())?.loai || '') : '';
+  }
   function banner(kind, title, detail, undoCode = null) {
     const el = $('banner'); el.className = 'banner ' + kind;
+    const tag = loaiTag(loaiOfDetail(detail));
     el.querySelector('.b-title').textContent = title; el.querySelector('.b-detail').textContent = detail || '';
+    const bt = $('bannerTag'); bt.hidden = !tag; if (tag) { bt.textContent = tag.text; bt.className = 'b-tag ' + tag.cls; }
     state.undoCode = undoCode; $('btnUndo').hidden = !undoCode;       // nút "Bỏ tick" chỉ hiện khi bệnh nhân đã nộp hồ sơ
     showPopup(kind, title, detail, undoCode);
   }
@@ -228,6 +242,9 @@
     const lines = String(detail || '').split('\n');
     const hasName = /\([A-Za-z0-9]+\)\s*$/.test(lines[0] || '');                // dòng đầu dạng "Họ tên (MÃ)"
     $('popupName').textContent = hasName ? lines.shift() : '';
+    const tag = loaiTag(loaiOfDetail(detail));
+    if (tag && tag.cls === 'loai-both') lines.unshift('Kiểm tra đủ 2 bộ hồ sơ giấy: nghề nghiệp + định kỳ.');
+    const pt = $('popupTag'); pt.hidden = !tag; if (tag) { pt.textContent = tag.text; pt.className = 'p-tag ' + tag.cls; }
     $('popupDetail').textContent = lines.join('\n');
     $('popupUndo').hidden = !undoCode;
     $('popupOk').textContent = undoCode ? 'Đóng' : 'OK';
@@ -235,7 +252,8 @@
     $('popup').hidden = false; state.popupOpen = true;
     clearTimeout(popupTimer);
     // thành công tự đóng nhanh; cần thao tác (đã nộp) thì ở lại cho tới khi người dùng đóng
-    const ms = undoCode ? 0 : kind === 'success' || kind === 'info' ? 2500 : kind === 'warning' ? 4500 : 5500;
+    let ms = undoCode ? 0 : kind === 'success' || kind === 'info' ? 2500 : kind === 'warning' ? 4500 : 5500;
+    if (ms && tag) ms = Math.max(ms, 6000);                      // người phụ trách cần thời gian đối chiếu hồ sơ
     const timer = $('popupTimer'); timer.classList.remove('run');
     if (ms) { timer.style.setProperty('--dur', ms + 'ms'); void timer.offsetWidth; timer.classList.add('run'); popupTimer = setTimeout(closePopup, ms); }
   }
@@ -415,7 +433,7 @@
       const cls = r.submittedAt ? 'submitted' : r.examinedAt ? 'waiting' : '';
       const chips = (r.examinedAt ? `<span class="chip ex">✓ Khám ${fmtHour(r.examinedAt)}</span>` : '<span class="chip">Chưa đến khám</span>') +
         (r.submittedAt ? `<span class="chip sub">✓ Nộp ${fmtTime(r.submittedAt)}</span>` + (r.examinedAt ? '' : '<span class="chip wait">Chưa ghi nhận khám</span>') : r.examinedAt ? '<span class="chip wait">Chờ nộp hồ sơ</span>' : '');
-      return `<li class="item ${cls}" data-code="${esc(r.code)}"><div class="name">${esc(r.name)}</div><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}${r.loai ? ' • ' + esc(loaiShort(r)) : ''}</div><div class="chips">${chips}</div></li>`;
+      return `<li class="item ${cls}" data-code="${esc(r.code)}"><div class="name">${esc(r.name)}</div><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}</div><div class="chips">${loaiChip(r)}${chips}</div></li>`;
     }).join('');
     $('btnMore').hidden = rows.length <= shown.length;
   }
@@ -497,7 +515,7 @@
     const cls = r.submittedAt ? 'submitted' : r.examinedAt ? 'waiting' : '';
     const chips = (r.examinedAt ? `<span class="chip ex">✓ Khám ${fmtHour(r.examinedAt)}</span>` : '<span class="chip">Chưa đến khám</span>') +
       (r.submittedAt ? `<span class="chip sub">✓ Nộp ${fmtTime(r.submittedAt)}</span>` + (r.examinedAt ? '' : '<span class="chip wait">Chưa ghi nhận khám</span>') : r.examinedAt ? '<span class="chip wait">Chờ nộp hồ sơ</span>' : '');
-    return `<li class="item ${cls}" data-code="${esc(r.code)}"><div class="name">${esc(r.name)}</div><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}${r.loai ? ' • ' + esc(loaiShort(r)) : ''}</div><div class="chips">${chips}</div></li>`;
+    return `<li class="item ${cls}" data-code="${esc(r.code)}"><div class="name">${esc(r.name)}</div><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}</div><div class="chips">${loaiChip(r)}${chips}</div></li>`;
   }
   function renderQuick() {
     const text = $('manualInput').value;
@@ -542,6 +560,7 @@
     const r = state.byCode.get(code); if (!r) return;
     detailCode = code;
     $('detailBody').innerHTML = `<h2>${esc(r.name)}</h2><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}</div>
+      ${(() => { const t = loaiTag(r.loai); return t ? `<div class="p-tag ${t.cls}">${esc(t.text)}</div>${r.loai === LOAI_BOTH ? '<div class="meta">Kiểm tra đủ 2 bộ hồ sơ giấy: nghề nghiệp + định kỳ.</div>' : ''}` : ''; })()}
       <div class="kv"><span>Ngày/năm sinh</span><span>${esc(formatBirth(r))}</span><span>Giới tính</span><span>${esc(r.gender || '')}</span>
       <span>Công ty</span><span>${esc(r.company || '')}</span><span>CCCD</span><span>${esc(maskCccd(r.cccd))}</span>
       <span>Đã khám</span><span>${r.examinedAt ? '✓ ' + fmtTime(r.examinedAt) : 'Chưa'}</span>
