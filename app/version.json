@@ -1,5 +1,5 @@
 {
-    "version":  "1.1.54",
-    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.54_win-x64.zip",
-    "notes":  "Giao diện Check-in/Check-out gọn hơn: nút thao tác lên tiêu đề, danh sách cao hơn, lịch sử không xuống dòng."
+    "version":  "1.1.55",
+    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.55_win-x64.zip",
+    "notes":  "Check-in: 3 ô số liệu cùng hàng lọc ngày; dòng Hiển thị chuyển xuống cuối danh sách."
 }
