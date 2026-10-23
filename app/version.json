@@ -1,5 +1,5 @@
 {
-    "version":  "1.1.58",
-    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.58_win-x64.zip",
-    "notes":  "Bỏ khu camera, lịch sử lên trên; bỏ dòng mô tả, icon ứng dụng lớn nổi bật."
+    "version":  "1.1.59",
+    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.59_win-x64.zip",
+    "notes":  "Check-in: cột Loại BN có màu và thẻ phân loại khi quét, giống Check-out."
 }
