@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.21';
+  const APP_VERSION = '1.0.22';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 

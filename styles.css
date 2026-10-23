@@ -268,8 +268,8 @@ dialog.ask::backdrop { background: rgba(8, 18, 30, .62); }
 .pill.nn { background: #008080; } .pill.dk { background: #4f46e5; } .pill.both { background: #d62864; } .pill.none { background: #6e7887; }
 
 /* ---- Màu thẻ loại BN: nghề nghiệp cam, định kỳ xanh dương (cùng màu nút Dữ liệu Cloud), 2 loại đỏ tươi */
-.loai-nn { --tag: #ea7814; } .loai-dk { --tag: #2180eb; } .loai-both { --tag: #d62864; } .loai-other { --tag: #6e7887; }
-.pill.nn { background: #ea7814; } .pill.dk { background: #2180eb; } .pill.both { background: #d62864; }
+.loai-nn { --tag: #ea7814; } .loai-dk { --tag: #18643a; } .loai-both { --tag: #d62864; } .loai-other { --tag: #6e7887; }
+.pill.nn { background: #ea7814; } .pill.dk { background: #18643a; } .pill.both { background: #d62864; }
 
 /* ---- Số liệu theo ngày trong các ô thống kê */
 .card .c-day { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--muted); }
