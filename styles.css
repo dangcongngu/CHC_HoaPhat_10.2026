@@ -135,8 +135,6 @@ dialog.ask::backdrop { background: rgba(8, 18, 30, .62); }
 .card .c-sub b { color: var(--text); }
 .card.wide { grid-column: span 2; }
 .filters { display: grid; gap: 8px; margin: 12px 0 6px; }
-.datefilter { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; }
-.datefilter .btn { width: 100%; justify-self: stretch; min-height: 48px; }
 .listbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 2px; }
 .listbar .listinfo { margin: 0; }
 .listbar .btn { flex: none; min-height: 42px; }
@@ -208,8 +206,7 @@ dialog.ask::backdrop { background: rgba(8, 18, 30, .62); }
   .card.wide { grid-column: auto; }
   .card .c-val { font-size: 28px; }
   .filters { grid-template-columns: 2fr 1fr; align-items: start; }
-  .datefilter { grid-column: 1 / -1; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto; }
-  .datefilter .btn { width: auto; order: 5; }
+  .datefilter { grid-column: 1 / -1; }
   .dayinfo { grid-column: 1 / -1; }
   #list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
   #list .item { margin: 0; }
@@ -269,3 +266,36 @@ dialog.ask::backdrop { background: rgba(8, 18, 30, .62); }
 /* ---- Thẻ số theo Loại BN trên các ô thống kê */
 .pill { display: inline-block; font-size: 11px; font-weight: 800; line-height: 1.5; color: #fff; padding: 0 8px; border-radius: 999px; margin: 3px 4px 0 0; background: #6e7887; }
 .pill.nn { background: #008080; } .pill.dk { background: #4f46e5; } .pill.both { background: #d62864; } .pill.none { background: #6e7887; }
+
+/* ---- Màu thẻ loại BN: nghề nghiệp cam, định kỳ xanh dương (cùng màu nút Dữ liệu Cloud), 2 loại đỏ tươi */
+.loai-nn { --tag: #ea7814; } .loai-dk { --tag: #2180eb; } .loai-both { --tag: #d62864; } .loai-other { --tag: #6e7887; }
+.pill.nn { background: #ea7814; } .pill.dk { background: #2180eb; } .pill.both { background: #d62864; }
+
+/* ---- Số liệu theo ngày trong các ô thống kê */
+.card .c-day { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--muted); }
+.card .c-day .dv { font-size: 14px; font-weight: 800; color: var(--blue); margin-left: 4px; }
+.card.green .c-day .dv { color: var(--green); } .card.amber .c-day .dv { color: var(--amber); } .card.red .c-day .dv { color: var(--red); }
+.card .c-det { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+/* ---- Bộ lọc ngày: công tắc, nút chọn kiểu ngày, hộp chọn ngày có mũi tên (gọn, tự xuống dòng trên màn hình hẹp) */
+.datefilter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+.switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-weight: 700; font-size: 14px; color: var(--blue-d); }
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch .track { position: relative; width: 44px; height: 26px; border-radius: 999px; background: #c8d3e0; transition: background .18s; flex: none; }
+.switch .track i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .18s; }
+.switch input:checked + .track { background: var(--blue); }
+.switch input:checked + .track i { transform: translateX(18px); }
+.switch input:focus-visible + .track { outline: 3px solid rgba(38,104,166,.35); outline-offset: 2px; }
+.seg { display: inline-flex; background: #e9eff6; border-radius: 999px; padding: 3px; }
+.seg button { appearance: none; border: 0; background: transparent; font: inherit; font-weight: 700; font-size: 13px; color: var(--muted); padding: 7px 14px; border-radius: 999px; cursor: pointer; min-height: 34px; }
+.seg button.on { background: #fff; color: var(--blue-d); box-shadow: 0 1px 4px rgba(20,50,90,.18); }
+.datebox { display: inline-flex; align-items: center; gap: 4px; background: #f4f7fb; border: 1px solid var(--line); border-radius: 999px; padding: 3px; margin-left: auto; }
+.datebox .dv { display: flex; align-items: center; gap: 6px; padding: 0 6px; color: var(--blue-d); margin: 0; }
+.datebox input[type=date] { border: 0; background: transparent; min-height: 34px; padding: 0; font-weight: 700; font-size: 15px; color: var(--text); width: 9.5em; }
+.datebox .step { appearance: none; border: 0; background: #fff; color: var(--blue-d); width: 34px; height: 34px; border-radius: 50%; font-size: 22px; line-height: 1; cursor: pointer; box-shadow: 0 1px 3px rgba(20,50,90,.15); }
+.datebox .today { white-space: nowrap; flex: none; appearance: none; border: 0; background: var(--blue); color: #fff; font: inherit; font-weight: 700; font-size: 13px; padding: 0 14px; height: 34px; border-radius: 999px; cursor: pointer; }
+.datefilter:has(#dateOn:not(:checked)) .seg, .datefilter:has(#dateOn:not(:checked)) .datebox .dv { opacity: .55; }
+@media (max-width: 520px) { .datebox { margin-left: 0; width: 100%; justify-content: space-between; } .datebox input[type=date] { width: 7.6em; font-size: 14px; } .datebox .today { padding: 0 11px; } }
+@media (prefers-color-scheme: dark) { .seg { background: #1f2b3a; } .seg button.on { background: #2b3b50; color: #fff; } .datebox { background: #1b2735; } .datebox .step { background: #2b3b50; color: #fff; } }
+
+#btnMore[hidden] { display: none !important; }

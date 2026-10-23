@@ -77,10 +77,20 @@
           <option value="check">Nộp nhưng chưa ghi nhận khám</option>
         </select>
         <div class="datefilter">
-          <label class="chk"><input type="checkbox" id="dateOn"> Lọc theo ngày</label>
-          <button class="btn small" id="btnToday" type="button">Hôm nay</button>
-          <select id="dateBasis" aria-label="Lọc theo"><option value="submitted">Ngày nộp hồ sơ</option><option value="examined">Ngày khám</option></select>
-          <input type="date" id="dateValue" aria-label="Chọn ngày">
+          <label class="switch" title="Bật để chỉ xem hồ sơ của một ngày">
+            <input type="checkbox" id="dateOn"><span class="track"><i></i></span><span class="sw-text">Lọc theo ngày</span>
+          </label>
+          <div class="seg" id="basisSeg" role="group" aria-label="Lọc theo">
+            <button type="button" data-basis="submitted" class="on">Ngày nộp</button>
+            <button type="button" data-basis="examined">Ngày khám</button>
+          </div>
+          <select id="dateBasis" aria-label="Lọc theo" hidden><option value="submitted">Ngày nộp hồ sơ</option><option value="examined">Ngày khám</option></select>
+          <div class="datebox">
+            <button type="button" class="step" id="btnPrevDay" aria-label="Ngày trước">‹</button>
+            <label class="dv"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><input type="date" id="dateValue" aria-label="Chọn ngày"></label>
+            <button type="button" class="step" id="btnNextDay" aria-label="Ngày sau">›</button>
+            <button class="today" id="btnToday" type="button">Hôm nay</button>
+          </div>
         </div>
         <div id="dayInfo" class="dayinfo"></div>
       </div>

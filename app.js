@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.19';
+  const APP_VERSION = '1.0.20';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -383,13 +383,28 @@
   function renderCards() {
     const s = stats();
     const P = state.patients;
-    const withLoai = (text, group) => { const l = loaiLine(group); return l ? `${text || '&nbsp;'}<br>${l}` : text; };
     const pct = (a, b) => (b ? `${(a * 100 / b).toFixed(1).replace(/\.0$/, '')}%` : '');
-    const card = (cls, title, val, sub, wide = '') => `<div class="card ${cls} ${wide}"><div class="c-title">${title}</div><div class="c-val">${val.toLocaleString('vi-VN')}</div><div class="c-sub">${sub || '&nbsp;'}</div></div>`;
+    const n = (v) => v.toLocaleString('vi-VN');
+    // Số liệu theo ngày: ngày đang chọn ở bộ lọc ngày, không lọc thì là hôm nay.
+    const filtered = $('dateOn')?.checked && $('dateValue')?.value;
+    const day = filtered ? $('dateValue').value : dayKey(new Date());
+    const [dy, dm, dd] = day.split('-');
+    const label = `${filtered ? 'Ngày' : 'Hôm nay'} ${dd}/${dm}`;
+    const received = P.filter((x) => x.examinedAt && dayKey(x.examinedAt) === day);
+    const submitted = P.filter((x) => x.submittedAt && dayKey(x.submittedAt) === day);
+    const recWaiting = received.filter((x) => !x.submittedAt).length;
+    const sameDay = submitted.filter((x) => x.examinedAt && dayKey(x.examinedAt) === day).length;
+    const otherDay = submitted.filter((x) => x.examinedAt && dayKey(x.examinedAt) !== day).length;
+    const noExam = submitted.filter((x) => !x.examinedAt).length;
+    const dayBlock = (value, unit, detail, group) => `<div class="c-day">${label}:<span class="dv">${n(value)} ${unit}</span></div><div class="c-det">${detail}</div><div>${loaiLine(group)}</div>`;
+    const card = (cls, title, val, sub, group, extra = '', wide = '') => `<div class="card ${cls} ${wide}"><div class="c-title">${title}</div><div class="c-val">${n(val)}</div><div class="c-sub">${sub || '&nbsp;'}</div><div>${group ? loaiLine(group) : ''}</div>${extra}</div>`;
+    const detSubmitted = [`${n(sameDay)} cùng ngày`, otherDay ? `${n(otherDay)} ngày khác` : '', noExam ? `${n(noExam)} chưa tick` : ''].filter(Boolean).join(' + ');
     $('cards').innerHTML =
-      card('', 'Tổng danh sách', s.total, totalSub(state.patients)) + card('', 'Đã khám', s.examined, withLoai(pct(s.examined, s.total) + ' tổng danh sách', P.filter((x) => x.examinedAt))) +
-      card('green', 'Đã nộp hồ sơ', s.submitted, withLoai(s.examined ? pct(s.submitted, s.examined) + ' số đã khám' : '', P.filter((x) => x.submittedAt))) + card('amber', 'Chờ nộp hồ sơ', s.waiting, withLoai(s.waiting ? 'đã khám, chưa nộp' : 'không còn hồ sơ chờ', P.filter((x) => x.examinedAt && !x.submittedAt))) +
-      card('red', 'Nộp nhưng chưa ghi nhận khám', s.check, s.check ? 'cần kiểm tra lại' : 'không có trường hợp lệch', 'wide');
+      card('', 'Tổng danh sách', s.total, 'bệnh nhân', P) +
+      card('', 'Đã khám', s.examined, pct(s.examined, s.total) + ' tổng danh sách', P.filter((x) => x.examinedAt), dayBlock(received.length, 'khám', `${n(recWaiting)} chờ nộp + ${n(received.length - recWaiting)} đã nộp`, received)) +
+      card('green', 'Đã nộp hồ sơ', s.submitted, s.examined ? pct(s.submitted, s.examined) + ' số đã khám' : '', P.filter((x) => x.submittedAt), dayBlock(submitted.length, 'nộp', detSubmitted, submitted)) +
+      card('amber', 'Chờ nộp hồ sơ', s.waiting, s.waiting ? 'đã khám, chưa nộp' : 'không còn hồ sơ chờ', P.filter((x) => x.examinedAt && !x.submittedAt)) +
+      card('red', 'Nộp nhưng chưa ghi nhận khám', s.check, s.check ? 'cần kiểm tra lại' : 'không có trường hợp lệch', null, '', 'wide');
   }
 
   function filtered() {
@@ -707,8 +722,18 @@
       $('btnEye').setAttribute('aria-pressed', String(show)); $('btnEye').setAttribute('aria-label', show ? 'Ẩn mã truy cập' : 'Hiện mã truy cập');
       document.querySelector('.eye-on').hidden = show; document.querySelector('.eye-off').hidden = !show;
     });
-    for (const id of ['search', 'statusFilter', 'dateOn', 'dateBasis', 'dateValue']) $(id).addEventListener('input', () => { state.shown = CFG.pageSize || 60; renderList(); });
-    $('btnToday').addEventListener('click', () => { $('dateValue').value = dayKey(new Date()); $('dateOn').checked = true; state.shown = CFG.pageSize || 60; renderList(); });
+    const refreshList = () => { state.shown = CFG.pageSize || 60; renderList(); renderCards(); };
+    for (const id of ['search', 'statusFilter', 'dateOn', 'dateBasis', 'dateValue']) $(id).addEventListener('input', refreshList);
+    $('btnToday').addEventListener('click', () => { $('dateValue').value = dayKey(new Date()); $('dateOn').checked = true; refreshList(); });
+    const stepDay = (delta) => { const cur = $('dateValue').value ? new Date($('dateValue').value + 'T00:00:00') : new Date(); cur.setDate(cur.getDate() + delta); $('dateValue').value = dayKey(cur); $('dateOn').checked = true; refreshList(); };
+    $('btnPrevDay').addEventListener('click', () => stepDay(-1));
+    $('btnNextDay').addEventListener('click', () => stepDay(1));
+    $('basisSeg').addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-basis]'); if (!b) return;
+      $('dateBasis').value = b.dataset.basis;
+      $('basisSeg').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+      $('dateOn').checked = true; refreshList();
+    });
     $('btnExport').addEventListener('click', exportList);
     $('btnMore').addEventListener('click', () => { state.shown += CFG.pageSize || 60; renderList(); });
     $('list').addEventListener('click', (e) => { const li = e.target.closest('.item'); if (li) openDetail(li.dataset.code); });

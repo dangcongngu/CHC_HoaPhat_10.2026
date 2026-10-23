@@ -1,5 +1,5 @@
 {
-    "version":  "1.1.63",
-    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.63_win-x64.zip",
-    "notes":  "Bảng thống kê gọn: số màu nổi bật kèm thẻ NN/ĐK/2 loại; tiêu đề cột giờ một dòng."
+    "version":  "1.1.64",
+    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.64_win-x64.zip",
+    "notes":  "Thẻ loại BN đổi màu (NN cam, ĐK xanh), số liệu cùng hàng ngày; web có thống kê theo ngày và bộ lọc ngày mới."
 }
