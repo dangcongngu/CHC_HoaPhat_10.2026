@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.18';
+  const APP_VERSION = '1.0.19';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -107,8 +107,8 @@
     const nn = k.includes('nghenghiep'); const dk = k.includes('dinhky') || k.includes('dinhki');
     return nn && dk ? LOAI_BOTH : nn ? LOAI_NN : dk ? LOAI_DK : String(v).trim();
   }
-  const loaiName = (name) => (name === LOAI_NN ? 'Nghề nghiệp' : name === LOAI_DK ? 'Định kỳ' : name === LOAI_BOTH ? 'Cả hai' : name === LOAI_NONE ? 'Chưa phân loại' : name);
-  const loaiChip = (r) => { const t = loaiTag(r.loai); return t ? `<span class="chip loai ${t.cls}">${esc(r.loai === LOAI_BOTH ? '⚠ Cả hai loại' : loaiName(r.loai))}</span>` : ''; };
+  const loaiName = (name) => (name === LOAI_NN ? 'Nghề nghiệp' : name === LOAI_DK ? 'Định kỳ' : name === LOAI_BOTH ? '2 loại' : name === LOAI_NONE ? 'Chưa phân loại' : name);
+  const loaiChip = (r) => { const t = loaiTag(r.loai); return t ? `<span class="chip loai ${t.cls}">${esc(r.loai === LOAI_BOTH ? '⚠ 2 loại' : loaiName(r.loai))}</span>` : ''; };
   const loaiShort = (r) => (r.loai === LOAI_BOTH ? 'Nghề nghiệp + Định kỳ' : loaiName(r.loai || ''));
   /** Thống kê theo Loại BN: [{ name, total, examined, submitted }] (chỉ khi danh sách có cột Loại BN). */
   function loaiStats(list) {
@@ -119,15 +119,16 @@
     return groups.map(([name, test]) => { const g = list.filter(test); return { name, total: g.length, examined: g.filter((x) => x.examinedAt).length, submitted: g.filter((x) => x.submittedAt).length }; }).filter((g) => g.total > 0);
   }
   /** Chú thích dưới ô "Tổng danh sách": số bệnh nhân từng loại (chỉ hiện khi danh sách có cột Loại BN). */
-  function totalSub(list) {
-    const ls = loaiStats(list);
-    if (!ls.length) return 'bệnh nhân';
-    const n = (v) => v.toLocaleString('vi-VN');
-    // Cả hai chỉ hiện khi có; Chưa phân loại chỉ hiện khi có (loaiStats đã lọc nhóm rỗng, nhưng luôn hiện 2 loại chính)
-    const main = [LOAI_NN, LOAI_DK].map((name) => ({ name, total: (ls.find((x) => x.name === name) || { total: 0 }).total }));
-    const extra = ls.filter((x) => x.name === LOAI_BOTH || x.name === LOAI_NONE);
-    return `bệnh nhân<br>` + [...main, ...extra].map((x) => `${x.name === LOAI_BOTH ? 'Trong đó khám cả hai loại' : x.name}: <b>${n(x.total)}</b>`).join('<br>');
+  /** Thẻ nhỏ có màu: "NN 80", "ĐK 40", "2 loại 12" (nhân viên khám 2 loại tính ở cả nhóm NN lẫn ĐK). */
+  function loaiPills(group) {
+    const all = loaiStats(state.patients); if (!all.length) return '';
+    const g = loaiStats(group); const n = (v) => v.toLocaleString('vi-VN');
+    const count = (name) => (g.find((y) => y.name === name) || { total: 0 }).total;
+    const cls = { [LOAI_NN]: 'nn', [LOAI_DK]: 'dk', [LOAI_BOTH]: 'both', [LOAI_NONE]: 'none' };
+    const label = { [LOAI_NN]: 'NN', [LOAI_DK]: 'ĐK', [LOAI_BOTH]: '2 loại', [LOAI_NONE]: 'Chưa PL' };
+    return all.map((x) => ((x.name === LOAI_NONE || x.name === LOAI_BOTH) && !count(x.name) ? '' : `<span class="pill ${cls[x.name]}">${label[x.name]} ${n(count(x.name))}</span>`)).join('');
   }
+  function totalSub(list) { const p = loaiPills(list); return p ? `bệnh nhân<br>${p}` : 'bệnh nhân'; }
 
   function toRec(d) {
     const rec = {
@@ -211,7 +212,7 @@
   /** Thẻ phân loại BN: { text, cls } hoặc null. Màu: nghề nghiệp xanh ngọc, định kỳ xanh chàm, cả hai đỏ tươi. */
   function loaiTag(loai) {
     if (!loai) return null;
-    if (loai === LOAI_BOTH) return { text: 'KHÁM CẢ HAI LOẠI: NGHỀ NGHIỆP + ĐỊNH KỲ', cls: 'loai-both' };
+    if (loai === LOAI_BOTH) return { text: 'KHÁM 2 LOẠI: NGHỀ NGHIỆP + ĐỊNH KỲ', cls: 'loai-both' };
     return { text: String(loai).toUpperCase(), cls: loai === LOAI_NN ? 'loai-nn' : loai === LOAI_DK ? 'loai-dk' : 'loai-other' };
   }
   /** Loại BN của bệnh nhân ở dòng đầu "Họ tên (MÃ)" của nội dung thông báo. */
@@ -378,14 +379,7 @@
     };
   }
   /** Dòng "Nghề nghiệp a • Định kỳ b" của một nhóm (đã khám, đã nộp...) so với toàn danh sách; rỗng nếu không có cột Loại BN. */
-  function loaiLine(group) {
-    const all = loaiStats(state.patients); if (!all.length) return '';
-    const g = loaiStats(group); const n = (v) => v.toLocaleString('vi-VN');
-    const count = (name) => (g.find((y) => y.name === name) || { total: 0 }).total;
-    const parts = all.filter((x) => x.name !== LOAI_BOTH).map((x) => (x.name === LOAI_NONE && !count(x.name) ? '' : `${loaiName(x.name)} <b>${n(count(x.name))}</b>`)).filter(Boolean);
-    const both = count(LOAI_BOTH);
-    return parts.join(' • ') + (both ? ` (cả hai <b>${n(both)}</b>)` : '');
-  }
+  function loaiLine(group) { return loaiPills(group); }
   function renderCards() {
     const s = stats();
     const P = state.patients;
@@ -476,7 +470,7 @@
       const ls = loaiStats(rows);   // thống kê theo Loại BN của danh sách đang xuất
       if (ls.length) {
         const total = { t: rows.length, e: rows.filter((x) => x.examinedAt).length, s: rows.filter((x) => x.submittedAt).length };   // nhân viên khám cả hai loại nằm ở cả hai nhóm nên tổng lấy theo số người
-        const st = window.XLSX.utils.aoa_to_sheet([['Loại BN', 'Số bệnh nhân', 'Đã khám', 'Đã nộp hồ sơ'], ...ls.map((x) => [x.name === LOAI_BOTH ? 'Trong đó khám cả hai loại' : x.name, x.total, x.examined, x.submitted]), ['Tổng số nhân viên (không trùng)', total.t, total.e, total.s]]);
+        const st = window.XLSX.utils.aoa_to_sheet([['Loại BN', 'Số bệnh nhân', 'Đã khám', 'Đã nộp hồ sơ'], ...ls.map((x) => [x.name === LOAI_BOTH ? 'Khám 2 loại' : x.name, x.total, x.examined, x.submitted]), ['Tổng số nhân viên (không trùng)', total.t, total.e, total.s]]);
         st['!cols'] = [{ wch: 20 }, { wch: 14 }, { wch: 12 }, { wch: 16 }];
         window.XLSX.utils.book_append_sheet(wb, st, 'Thong ke Loai BN');
       }

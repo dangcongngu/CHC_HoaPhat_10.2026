@@ -265,3 +265,7 @@ dialog.ask::backdrop { background: rgba(8, 18, 30, .62); }
 .p-tag[hidden], .b-tag[hidden] { display: none; }
 .p-tag.loai-both, .b-tag.loai-both { font-size: 15px; box-shadow: 0 0 0 3px rgba(214,40,100,.25); }
 .chip.loai { background: var(--tag); color: #fff; font-weight: 700; }
+
+/* ---- Thẻ số theo Loại BN trên các ô thống kê */
+.pill { display: inline-block; font-size: 11px; font-weight: 800; line-height: 1.5; color: #fff; padding: 0 8px; border-radius: 999px; margin: 3px 4px 0 0; background: #6e7887; }
+.pill.nn { background: #008080; } .pill.dk { background: #4f46e5; } .pill.both { background: #d62864; } .pill.none { background: #6e7887; }
