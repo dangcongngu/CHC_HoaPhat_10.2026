@@ -1,5 +1,5 @@
 {
-    "version":  "1.1.67",
-    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.67_win-x64.zip",
-    "notes":  "Check-out: bỏ thanh cuộn ngang, cột Phát chỉ dấu tick, khoảng cách cột hẹp; dòng số lượng dưới danh sách nhỏ hơn."
+    "version":  "1.1.68",
+    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.68_win-x64.zip",
+    "notes":  "Cột Mã NV, STT, giờ cố định theo nội dung; họ tên giãn, không còn khoảng trống giữa các cột."
 }
