@@ -1,9 +1,9 @@
-/* Lượm Lúa - Nộp hồ sơ (check-out) cho điện thoại.
+﻿/* Lượm Lúa - Nộp hồ sơ (check-out) cho điện thoại.
  * Dùng chung database Supabase với app máy tính: gọi các hàm RPC (mark_submitted, list_patients, get_changes...).
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.20';
+  const APP_VERSION = '1.0.21';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -126,7 +126,8 @@
     const count = (name) => (g.find((y) => y.name === name) || { total: 0 }).total;
     const cls = { [LOAI_NN]: 'nn', [LOAI_DK]: 'dk', [LOAI_BOTH]: 'both', [LOAI_NONE]: 'none' };
     const label = { [LOAI_NN]: 'NN', [LOAI_DK]: 'ĐK', [LOAI_BOTH]: '2 loại', [LOAI_NONE]: 'Chưa PL' };
-    return all.map((x) => ((x.name === LOAI_NONE || x.name === LOAI_BOTH) && !count(x.name) ? '' : `<span class="pill ${cls[x.name]}">${label[x.name]} ${n(count(x.name))}</span>`)).join('');
+    const keyOf = { [LOAI_NN]: 'NN', [LOAI_DK]: 'DK', [LOAI_BOTH]: 'BOTH', [LOAI_NONE]: 'NONE' };
+    return all.map((x) => ((x.name === LOAI_NONE || x.name === LOAI_BOTH) && !count(x.name) ? '' : `<span class="pill ${cls[x.name]}" data-loai="${keyOf[x.name]}" title="Bấm để lọc danh sách">${label[x.name]} ${n(count(x.name))}</span>`)).join('');
   }
   function totalSub(list) { const p = loaiPills(list); return p ? `bệnh nhân<br>${p}` : 'bệnh nhân'; }
 
@@ -380,6 +381,44 @@
   }
   /** Dòng "Nghề nghiệp a • Định kỳ b" của một nhóm (đã khám, đã nộp...) so với toàn danh sách; rỗng nếu không có cột Loại BN. */
   function loaiLine(group) { return loaiPills(group); }
+  /** Bộ lọc loại BN (khóa NN / DK / BOTH / NONE): NN và ĐK tính cả người khám 2 loại, giống số liệu trên ô thống kê. */
+  function matchLoai(v, key) {
+    if (key === 'NN') return v === LOAI_NN || v === LOAI_BOTH;
+    if (key === 'DK') return v === LOAI_DK || v === LOAI_BOTH;
+    if (key === 'BOTH') return v === LOAI_BOTH;
+    if (key === 'NONE') return ![LOAI_NN, LOAI_DK, LOAI_BOTH].includes(v);
+    return true;
+  }
+  function refreshAll() { state.shown = CFG.pageSize || 60; renderList(); renderCards(); renderLoaiBar(); }
+  function setBasis(basis) {
+    $('dateBasis').value = basis;
+    $('basisSeg').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.basis === basis));
+  }
+  function renderLoaiBar() {
+    const bar = $('loaiBar');
+    if (!state.loaiFilter) { bar.hidden = true; bar.innerHTML = ''; return; }
+    const names = { NN: ['nn', 'NN · Nghề nghiệp'], DK: ['dk', 'ĐK · Định kỳ'], BOTH: ['both', '2 loại'], NONE: ['none', 'Chưa phân loại'] };
+    const [cls, text] = names[state.loaiFilter];
+    bar.hidden = false;
+    bar.innerHTML = `Đang lọc loại: <span class="pill ${cls}">${text}</span><button type="button" id="btnClearLoai">✕ Bỏ lọc</button>`;
+    $('btnClearLoai').addEventListener('click', () => { state.loaiFilter = null; refreshAll(); });
+  }
+  /** Bấm vào ô thống kê: lọc danh sách đúng nhóm mà ô đó đếm; vùng "hôm nay" thì lọc theo ngày; thẻ loại thì lọc thêm theo loại. */
+  function applyCardFilter(key, loai, inDay) {
+    state.loaiFilter = loai || null;
+    $('search').value = '';
+    if (inDay && (key === 'examined' || key === 'submitted')) {
+      $('statusFilter').value = key;
+      setBasis(key);
+      $('dateOn').checked = true;
+      if (!$('dateValue').value) $('dateValue').value = dayKey(new Date());
+    } else {
+      $('dateOn').checked = false;
+      $('statusFilter').value = { examined: 'examined', submitted: 'submitted', waiting: 'waiting', check: 'check' }[key] || 'all';
+    }
+    refreshAll();
+    $('listInfo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   function renderCards() {
     const s = stats();
     const P = state.patients;
@@ -396,8 +435,9 @@
     const sameDay = submitted.filter((x) => x.examinedAt && dayKey(x.examinedAt) === day).length;
     const otherDay = submitted.filter((x) => x.examinedAt && dayKey(x.examinedAt) !== day).length;
     const noExam = submitted.filter((x) => !x.examinedAt).length;
-    const dayBlock = (value, unit, detail, group) => `<div class="c-day">${label}:<span class="dv">${n(value)} ${unit}</span></div><div class="c-det">${detail}</div><div>${loaiLine(group)}</div>`;
-    const card = (cls, title, val, sub, group, extra = '', wide = '') => `<div class="card ${cls} ${wide}"><div class="c-title">${title}</div><div class="c-val">${n(val)}</div><div class="c-sub">${sub || '&nbsp;'}</div><div>${group ? loaiLine(group) : ''}</div>${extra}</div>`;
+    const dayBlock = (value, unit, detail, group) => `<div class="dayzone"><div class="c-day">${label}:<span class="dv">${n(value)} ${unit}</span></div><div class="c-det">${detail}</div><div>${loaiLine(group)}</div></div>`;
+    const KEYS = { 'Tổng danh sách': 'total', 'Đã khám': 'examined', 'Đã nộp hồ sơ': 'submitted', 'Chờ nộp hồ sơ': 'waiting', 'Nộp nhưng chưa ghi nhận khám': 'check' };
+    const card = (cls, title, val, sub, group, extra = '', wide = '') => `<div class="card ${cls} ${wide}" data-card="${KEYS[title]}"><div class="c-title">${title}</div><div class="c-val">${n(val)}</div><div class="c-sub">${sub || '&nbsp;'}</div><div>${group ? loaiLine(group) : ''}</div>${extra}</div>`;
     const detSubmitted = [`${n(sameDay)} cùng ngày`, otherDay ? `${n(otherDay)} ngày khác` : '', noExam ? `${n(noExam)} chưa tick` : ''].filter(Boolean).join(' + ');
     $('cards').innerHTML =
       card('', 'Tổng danh sách', s.total, 'bệnh nhân', P) +
@@ -413,6 +453,7 @@
     const dateOn = $('dateOn').checked; const day = $('dateValue').value; const basis = $('dateBasis').value;
     return state.patients.filter((r) => {
       if (kw && !r.key.includes(kw)) return false;
+      if (state.loaiFilter && !matchLoai(r.loai, state.loaiFilter)) return false;
       if (status === 'examined' && !r.examinedAt) return false;
       if (status === 'check' && !(r.submittedAt && !r.examinedAt)) return false;
       if (status === 'submitted' && !r.submittedAt) return false;
@@ -722,16 +763,20 @@
       $('btnEye').setAttribute('aria-pressed', String(show)); $('btnEye').setAttribute('aria-label', show ? 'Ẩn mã truy cập' : 'Hiện mã truy cập');
       document.querySelector('.eye-on').hidden = show; document.querySelector('.eye-off').hidden = !show;
     });
-    const refreshList = () => { state.shown = CFG.pageSize || 60; renderList(); renderCards(); };
+    const refreshList = refreshAll;
     for (const id of ['search', 'statusFilter', 'dateOn', 'dateBasis', 'dateValue']) $(id).addEventListener('input', refreshList);
     $('btnToday').addEventListener('click', () => { $('dateValue').value = dayKey(new Date()); $('dateOn').checked = true; refreshList(); });
     const stepDay = (delta) => { const cur = $('dateValue').value ? new Date($('dateValue').value + 'T00:00:00') : new Date(); cur.setDate(cur.getDate() + delta); $('dateValue').value = dayKey(cur); $('dateOn').checked = true; refreshList(); };
+    $('cards').addEventListener('click', (e) => {
+      const el = e.target.closest('.card[data-card]'); if (!el) return;
+      const pill = e.target.closest('.pill[data-loai]');
+      applyCardFilter(el.dataset.card, pill ? pill.dataset.loai : null, !!e.target.closest('.dayzone'));
+    });
     $('btnPrevDay').addEventListener('click', () => stepDay(-1));
     $('btnNextDay').addEventListener('click', () => stepDay(1));
     $('basisSeg').addEventListener('click', (e) => {
       const b = e.target.closest('button[data-basis]'); if (!b) return;
-      $('dateBasis').value = b.dataset.basis;
-      $('basisSeg').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+      setBasis(b.dataset.basis);
       $('dateOn').checked = true; refreshList();
     });
     $('btnExport').addEventListener('click', exportList);

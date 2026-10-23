@@ -299,3 +299,13 @@ dialog.ask::backdrop { background: rgba(8, 18, 30, .62); }
 @media (prefers-color-scheme: dark) { .seg { background: #1f2b3a; } .seg button.on { background: #2b3b50; color: #fff; } .datebox { background: #1b2735; } .datebox .step { background: #2b3b50; color: #fff; } }
 
 #btnMore[hidden] { display: none !important; }
+
+/* ---- Bấm vào ô thống kê để lọc danh sách */
+.card[data-card] { cursor: pointer; transition: transform .08s, box-shadow .12s; }
+.card[data-card]:active { transform: scale(.985); }
+.card[data-card]:hover { box-shadow: 0 3px 12px rgba(20, 50, 90, .14); }
+.pill[data-loai] { cursor: pointer; }
+.pill[data-loai]:hover { filter: brightness(1.08); box-shadow: 0 0 0 2px rgba(20, 50, 90, .15); }
+.loaibar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; font-size: 14px; font-weight: 700; color: var(--blue-d); }
+.loaibar[hidden] { display: none; }
+.loaibar button { appearance: none; border: 0; background: #e9eff6; color: var(--blue-d); font: inherit; font-weight: 700; font-size: 13px; padding: 5px 12px; border-radius: 999px; cursor: pointer; margin-left: auto; }
