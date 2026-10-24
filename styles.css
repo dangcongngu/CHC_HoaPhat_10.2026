@@ -309,3 +309,9 @@ dialog.ask::backdrop { background: rgba(8, 18, 30, .62); }
 .loaibar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; font-size: 14px; font-weight: 700; color: var(--blue-d); }
 .loaibar[hidden] { display: none; }
 .loaibar button { appearance: none; border: 0; background: #e9eff6; color: var(--blue-d); font: inherit; font-weight: 700; font-size: 13px; padding: 5px 12px; border-radius: 999px; cursor: pointer; margin-left: auto; }
+
+/* ---- Dịch vụ thực hiện trong chi tiết bệnh nhân: dịch vụ có thực hiện tô màu, còn lại xám nhạt */
+.svc-title { margin: 12px 0 6px; font-weight: 800; font-size: 13px; color: var(--blue-d); }
+.svc-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.svc-list .sv { padding: 5px 11px; border-radius: 10px; background: #eef2f7; color: #94a3b4; font-size: 13px; font-weight: 600; border: 1px solid #dfe7f0; }
+.svc-list .sv.on { background: #2180eb; color: #fff; border-color: #1a68c0; font-weight: 800; }

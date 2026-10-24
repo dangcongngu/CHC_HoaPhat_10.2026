@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.22';
+  const APP_VERSION = '1.0.23';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -131,10 +131,19 @@
   }
   function totalSub(list) { const p = loaiPills(list); return p ? `bệnh nhân<br>${p}` : 'bệnh nhân'; }
 
+  // Dịch vụ thực hiện (cột đánh dấu "x" trong Excel): danh sách "dich_vu" trong dữ liệu phụ; hai dịch vụ cũ nằm ở cột riêng.
+  const SERVICE_NAMES = ['XQ Phổi', 'HH', 'CSTL', 'TL', 'Đo nhãn áp', 'Điện tim', 'HBCO', 'TSTC', 'vgB,C', 'ALBUMIN', 'PH da', 'HIV', 'AFB'];
+  function dichVu(d) {
+    const set = new Set(); const ex = d.extra || {};
+    if (Array.isArray(ex.dich_vu)) ex.dich_vu.forEach((x) => set.add(String(x)));
+    if (String(d.don_nhan_ap || '').trim()) set.add('Đo nhãn áp');
+    if (String(d.dien_tim || '').trim()) set.add('Điện tim');
+    return SERVICE_NAMES.filter((n) => set.has(n));
+  }
   function toRec(d) {
     const rec = {
       code: String(d.ma_nv || '').toUpperCase(), stt: d.stt, name: d.ho_ten || '', gender: d.gioi_tinh, dob: d.ngay_sinh, company: d.cong_ty, cccd: d.cccd,
-      loai: normLoai(d.loai_bn), extra: d.extra || {}, examinedAt: d.examined_at ? new Date(d.examined_at) : null, submittedAt: d.submitted_at ? new Date(d.submitted_at) : null
+      loai: normLoai(d.loai_bn), services: dichVu(d), extra: d.extra || {}, examinedAt: d.examined_at ? new Date(d.examined_at) : null, submittedAt: d.submitted_at ? new Date(d.submitted_at) : null
     };
     rec.key = fold(`${rec.code}|${rec.name}|${rec.stt ?? ''}`);
     return rec;
@@ -147,7 +156,7 @@
       const next = toRec(d);
       const cur = state.byCode.get(next.code);
       if (!cur) { state.patients.push(next); state.byCode.set(next.code, next); added = true; continue; }
-      const same = cur.name === next.name && cur.stt === next.stt && cur.loai === next.loai && +cur.examinedAt === +next.examinedAt && +cur.submittedAt === +next.submittedAt;
+      const same = cur.name === next.name && cur.stt === next.stt && cur.loai === next.loai && cur.services.join('|') === next.services.join('|') && +cur.examinedAt === +next.examinedAt && +cur.submittedAt === +next.submittedAt;
       if (same) continue;
       Object.assign(cur, next); changed = true;
     }
@@ -611,6 +620,8 @@
     detailCode = code;
     $('detailBody').innerHTML = `<h2>${esc(r.name)}</h2><div class="meta">${esc(r.code)} • STT ${esc(r.stt ?? '')}</div>
       ${(() => { const t = loaiTag(r.loai); return t ? `<div class="p-tag ${t.cls}">${esc(t.text)}</div>${r.loai === LOAI_BOTH ? '<div class="meta">Kiểm tra đủ 2 bộ hồ sơ giấy: nghề nghiệp + định kỳ.</div>' : ''}` : ''; })()}
+      <div class="svc-title">Dịch vụ thực hiện${r.services.length ? ` (${r.services.length}/${SERVICE_NAMES.length})` : ''}</div>
+      <div class="svc-list">${r.services.length ? SERVICE_NAMES.map((n) => `<span class="sv ${r.services.includes(n) ? 'on' : ''}">${r.services.includes(n) ? '✓ ' : ''}${esc(n)}</span>`).join('') : '<span class="meta">Chưa có dữ liệu dịch vụ</span>'}</div>
       <div class="kv"><span>Ngày/năm sinh</span><span>${esc(formatBirth(r))}</span><span>Giới tính</span><span>${esc(r.gender || '')}</span>
       <span>Công ty</span><span>${esc(r.company || '')}</span><span>CCCD</span><span>${esc(maskCccd(r.cccd))}</span>
       <span>Đã khám</span><span>${r.examinedAt ? '✓ ' + fmtTime(r.examinedAt) : 'Chưa'}</span>
