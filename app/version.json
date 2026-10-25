@@ -1,5 +1,5 @@
 {
     "version":  "1.1.73",
-    "url":  "https://github.com/dangcongngu/CHC_HoaPhat_10.2026/releases/download/v1.1.73/LuomLua_tool_v1.1.73_win-x64.zip",
+    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.73_win-x64.zip",
     "notes":  "Thêm bệnh nhân thủ công (có kiểm tra trùng STT/Mã NV/CCCD) ở màn hình import; web có form thêm thủ công."
 }
