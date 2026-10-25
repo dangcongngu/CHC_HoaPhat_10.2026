@@ -97,6 +97,7 @@
       </div>
       <div class="listbar">
         <div id="listInfo" class="listinfo"></div>
+        <button class="btn small" id="btnAdd" type="button">➕ Thêm thủ công</button>
         <button class="btn small primary" id="btnExport" type="button">Xuất / chia sẻ</button>
       </div>
       <div id="exportMsg" class="dayinfo" hidden></div>
@@ -183,6 +184,31 @@
         <button id="detailClose" class="btn">Đóng</button>
       </div>
     </div>
+  </dialog>
+
+  <!-- thêm bệnh nhân thủ công -->
+  <dialog id="addBox" class="sheet addsheet">
+    <form class="sheet-body" id="addForm" novalidate>
+      <h2>Thêm bệnh nhân thủ công</h2>
+      <p class="msg small">Các ô có dấu * là bắt buộc. Trùng STT / Mã NV / CCCD sẽ được cảnh báo.</p>
+      <div class="add-grid">
+        <label>STT *<input id="addStt" inputmode="numeric" maxlength="7" autocomplete="off"><span class="err" data-for="addStt"></span></label>
+        <label>Mã NV *<input id="addMa" maxlength="30" autocomplete="off" autocapitalize="characters" spellcheck="false"><span class="err" data-for="addMa"></span></label>
+        <label class="wide">Họ và tên *<input id="addName" maxlength="120" autocomplete="off"><span class="err" data-for="addName"></span></label>
+        <label>Ngày sinh<input id="addDob" type="date"><span class="err" data-for="addDob"></span></label>
+        <label>Giới tính<select id="addGender"><option value="">(Chưa chọn)</option><option>Nam</option><option>Nữ</option></select></label>
+        <label>CCCD (9 hoặc 12 số)<input id="addCccd" inputmode="numeric" maxlength="12" autocomplete="off"><span class="err" data-for="addCccd"></span></label>
+        <label>Loại BN<select id="addLoai"><option value="">(Chưa phân loại)</option><option value="Khám Nghề Nghiệp">Khám Nghề Nghiệp</option><option value="Khám Định Kỳ">Khám Định Kỳ</option><option value="Khám Nghề Nghiệp + Khám Định Kỳ">Khám 2 loại</option></select></label>
+        <label class="wide">Công ty<input id="addCompany" maxlength="150" autocomplete="off"></label>
+      </div>
+      <div class="svc-head"><b>Dịch vụ thực hiện</b><span><button type="button" class="btn small" id="addAll">Chọn tất cả</button> <button type="button" class="btn small" id="addNone">Bỏ chọn</button></span></div>
+      <div class="svc-pick" id="addServices"></div>
+      <p id="addMsg" class="msg" role="status"></p>
+      <div class="row">
+        <button type="submit" class="btn success" id="addSave">Thêm bệnh nhân</button>
+        <button type="button" class="btn" id="addClose">Đóng</button>
+      </div>
+    </form>
   </dialog>
 
   <nav class="tabs">

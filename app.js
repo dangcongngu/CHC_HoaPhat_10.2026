@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.23';
+  const APP_VERSION = '1.0.24';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -337,6 +337,68 @@
       box.addEventListener('click', (e) => { if (e.target === box || e.target.classList.contains('ask-wrap')) done(''); });
       box.showModal(); (danger ? $('askCancel') : $('askOk')).focus();
     });
+  }
+
+  // ------------------------------------------------------------ thêm bệnh nhân thủ công
+  const addMsg = (text, kind) => { const el = $('addMsg'); el.textContent = text; el.className = 'msg ' + (kind || ''); };
+  function addErrors(map) {
+    document.querySelectorAll('#addForm .err').forEach((s) => { s.textContent = map[s.dataset.for] || ''; $(s.dataset.for).classList.toggle('bad', !!map[s.dataset.for]); });
+  }
+  function openAdd() {
+    if (!state.access) { showView('settings'); return; }
+    const box = $('addServices');
+    if (!box.children.length) box.innerHTML = SERVICE_NAMES.map((n, i) => `<label class="sv-opt"><input type="checkbox" value="${esc(n)}" id="addSv${i}"><span>${esc(n)}</span></label>`).join('');
+    if (!$('addStt').value) $('addStt').value = String(Math.max(0, ...state.patients.map((p) => p.stt || 0)) + 1);
+    addErrors({}); addMsg('', ''); $('addBox').showModal(); $('addMa').focus();
+  }
+  function localDuplicates(stt, code, cccd) {
+    const out = [];
+    const byCode = state.byCode.get(code); if (byCode) out.push({ field: 'ma_nv', owner: `${byCode.name} (STT ${byCode.stt ?? ''}, Mã NV ${byCode.code})` });
+    const bySttRec = state.patients.find((p) => p.stt === stt); if (bySttRec) out.push({ field: 'stt', owner: `${bySttRec.name} (STT ${bySttRec.stt}, Mã NV ${bySttRec.code})` });
+    if (cccd) { const c = state.patients.find((p) => p.cccd === cccd); if (c) out.push({ field: 'cccd', owner: `${c.name} (STT ${c.stt ?? ''}, Mã NV ${c.code})` }); }
+    return out;
+  }
+  let adding = false;
+  async function submitAdd(ev) {
+    ev.preventDefault(); if (adding) return;
+    const sttText = $('addStt').value.trim(); const stt = /^\d+$/.test(sttText) ? parseInt(sttText, 10) : 0;
+    const code = $('addMa').value.trim().toUpperCase(); const name = $('addName').value.trim().replace(/\s+/g, ' ');
+    const cccd = $('addCccd').value.trim(); const dob = $('addDob').value;
+    const errs = {};
+    if (!stt || stt <= 0) errs.addStt = 'Bắt buộc nhập STT (số nguyên dương)';
+    if (!code) errs.addMa = 'Bắt buộc nhập Mã NV';
+    if (!name) errs.addName = 'Bắt buộc nhập họ và tên';
+    if (cccd && !/^(\d{9}|\d{12})$/.test(cccd)) errs.addCccd = 'CCCD phải có 9 hoặc 12 chữ số';
+    if (dob && dob > dayKey(new Date())) errs.addDob = 'Ngày sinh không hợp lệ';
+    addErrors(errs);
+    if (Object.keys(errs).length) { addMsg('Vui lòng nhập đủ các trường bắt buộc (*) và sửa các ô báo lỗi.', 'bad'); $(Object.keys(errs)[0]).focus(); return; }
+    adding = true; $('addSave').disabled = true; addMsg('Đang kiểm tra trùng lặp...', '');
+    try {
+      let dups = localDuplicates(stt, code, cccd);
+      try { const r = await rpc('check_patient_duplicates', withKey({ p_stt: stt, p_ma_nv: code, p_cccd: cccd || null })); dups = (r.duplicates || []).map((d) => ({ field: d.field, owner: `${d.ho_ten} (${[d.stt != null ? 'STT ' + d.stt : '', d.ma_nv ? 'Mã NV ' + d.ma_nv : ''].filter(Boolean).join(', ')})` })); }
+      catch (e) { if (e instanceof NetError) throw e; if (/chưa được thiết lập/.test(e.message)) throw new ApiError('Chưa bật chức năng thêm thủ công: quản trị viên cần chạy lại file supabase/loai_bn.sql (một lần).'); throw e; }
+      if (dups.some((d) => d.field === 'ma_nv')) {
+        addErrors({ addMa: 'Mã NV đã tồn tại' }); addMsg(`Mã NV ${code} đã có: ${dups.find((d) => d.field === 'ma_nv').owner}. Không thể thêm trùng Mã NV.`, 'bad'); $('addMa').focus(); return;
+      }
+      let force = false;
+      if (dups.length) {
+        const e2 = {}; dups.forEach((d) => { e2[d.field === 'stt' ? 'addStt' : 'addCccd'] = d.field === 'stt' ? 'STT đã có người dùng' : 'CCCD đã có người dùng'; }); addErrors(e2);
+        const ok = await askConfirm({ title: 'Cảnh báo trùng dữ liệu', name: name, detail: dups.map((d) => (d.field === 'stt' ? 'Trùng STT: ' : 'Trùng CCCD: ') + d.owner).join('\n') + '\n\nVẫn thêm bệnh nhân này?', okText: 'Vẫn thêm', cancelText: 'Quay lại sửa', kind: 'warning', danger: true, mascot: 'cancel' });
+        if (!ok) { addMsg('Chưa thêm: có STT / CCCD trùng. Hãy kiểm tra lại.', 'warn'); return; }
+        force = true;
+      }
+      addMsg('Đang thêm...', '');
+      const row = { stt, ma_nv: code, ho_ten: name, cccd: cccd || null, gioi_tinh: $('addGender').value || null, ngay_sinh: dob || null, cong_ty: $('addCompany').value.trim() || null, loai_bn: $('addLoai').value || null, dich_vu: [...document.querySelectorAll('#addServices input:checked')].map((c) => c.value) };
+      const res = await rpc('add_patient', withKey({ p_row: row, p_force: force, p_device: state.device }));
+      if (res.status === 'created') {
+        addMsg(`✓ Đã thêm ${name} (STT ${stt}, Mã NV ${code}).`, 'ok'); feedback('success');
+        $('addForm').reset(); addErrors({}); $('addStt').value = String(stt + 1);
+        pollOnce(); $('addMa').focus();
+      } else if (res.status === 'duplicate_ma_nv') { addErrors({ addMa: 'Mã NV đã tồn tại' }); addMsg(`Mã NV ${code} vừa được người khác thêm.`, 'bad'); }
+      else if (res.status === 'duplicates') addMsg('Dữ liệu vừa thay đổi và có STT / CCCD trùng. Bấm thêm lại để xác nhận.', 'warn');
+      else addMsg(res.message || 'Không thêm được bệnh nhân.', 'bad');
+    } catch (e) { addMsg('✗ ' + e.message, 'bad'); }
+    finally { adding = false; $('addSave').disabled = false; }
   }
 
   // Bỏ đánh dấu đã nộp (đưa về chưa nộp hồ sơ) từ thông báo sau khi quét.
@@ -791,6 +853,12 @@
       $('dateOn').checked = true; refreshList();
     });
     $('btnExport').addEventListener('click', exportList);
+    $('btnAdd').addEventListener('click', openAdd);
+    $('addForm').addEventListener('submit', submitAdd);
+    $('addClose').addEventListener('click', () => $('addBox').close());
+    $('addAll').addEventListener('click', () => document.querySelectorAll('#addServices input').forEach((c) => { c.checked = true; }));
+    $('addNone').addEventListener('click', () => document.querySelectorAll('#addServices input').forEach((c) => { c.checked = false; }));
+    for (const id of ['addStt', 'addCccd']) $(id).addEventListener('input', () => { $(id).value = $(id).value.replace(/\D/g, ''); });
     $('btnMore').addEventListener('click', () => { state.shown += CFG.pageSize || 60; renderList(); });
     $('list').addEventListener('click', (e) => { const li = e.target.closest('.item'); if (li) openDetail(li.dataset.code); });
     $('detailClose').addEventListener('click', () => $('detail').close());
