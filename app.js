@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.25';
+  const APP_VERSION = '1.0.26';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -28,6 +28,7 @@
     view: 'scan',
     shown: CFG.pageSize || 60,
     loaded: false,
+    locks: '',
     online: false
   };
   store.set('device', state.device);
@@ -170,7 +171,7 @@
       const snap = await rpc('list_patients', withKey());
       state.patients = (snap.rows || []).map(toRec);
       state.byCode = new Map(state.patients.map((r) => [r.code, r]));
-      state.cursor = snap.server_time;
+      state.cursor = snap.server_time; state.locks = (snap.locks || []).join('|');
       state.loaded = true; state.online = true;
       setConn('ok', `${state.patients.length.toLocaleString('vi-VN')} người`);
       $('subtitle').textContent = 'Quét QR khi bệnh nhân ra cổng';
@@ -193,6 +194,8 @@
       const since = new Date(new Date(state.cursor).getTime() - 10000).toISOString();   // lùi 10 giây để không sót thay đổi commit muộn
       const snap = await rpc('get_changes', withKey({ p_since: since }));
       state.cursor = snap.server_time;
+      // Có công ty vừa bị khóa / mở khóa: tải lại toàn bộ danh sách (công ty bị khóa được ẩn hoàn toàn).
+      if ((snap.locks || []).join('|') !== state.locks) { await loadAll(); return; }
       if (!state.online) { state.online = true; }
       setConn('ok', `${state.patients.length.toLocaleString('vi-VN')} người`);
       if (snap.rows?.length) applyRows(snap.rows);
