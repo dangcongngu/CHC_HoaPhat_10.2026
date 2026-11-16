@@ -1,5 +1,5 @@
 {
-    "version":  "1.1.73",
-    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.73_win-x64.zip",
-    "notes":  "Thêm bệnh nhân thủ công (có kiểm tra trùng STT/Mã NV/CCCD) ở màn hình import; web có form thêm thủ công."
+    "version":  "1.1.74",
+    "url":  "https://dangcongngu.github.io/CHC_HoaPhat_10.2026/app/LuomLua_tool_v1.1.74_win-x64.zip",
+    "notes":  "Thêm 4 dịch vụ mới: SA vú, Pap, SA bụng, SA giáp (có cả trong Trộn thư)."
 }

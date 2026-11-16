@@ -3,7 +3,7 @@
  * Không có máy chủ riêng; mã truy cập do nhân viên nhập và chỉ lưu trong trình duyệt của điện thoại. */
 (() => {
   'use strict';
-  const APP_VERSION = '1.0.24';
+  const APP_VERSION = '1.0.25';
   const CFG = window.APP_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -132,7 +132,7 @@
   function totalSub(list) { const p = loaiPills(list); return p ? `bệnh nhân<br>${p}` : 'bệnh nhân'; }
 
   // Dịch vụ thực hiện (cột đánh dấu "x" trong Excel): danh sách "dich_vu" trong dữ liệu phụ; hai dịch vụ cũ nằm ở cột riêng.
-  const SERVICE_NAMES = ['XQ Phổi', 'HH', 'CSTL', 'TL', 'Đo nhãn áp', 'Điện tim', 'HBCO', 'TSTC', 'vgB,C', 'ALBUMIN', 'PH da', 'HIV', 'AFB'];
+  const SERVICE_NAMES = ['XQ Phổi', 'HH', 'CSTL', 'TL', 'Đo nhãn áp', 'Điện tim', 'HBCO', 'TSTC', 'vgB,C', 'ALBUMIN', 'PH da', 'HIV', 'AFB', 'SA vú', 'Pap', 'SA bụng', 'SA giáp'];
   function dichVu(d) {
     const set = new Set(); const ex = d.extra || {};
     if (Array.isArray(ex.dich_vu)) ex.dich_vu.forEach((x) => set.add(String(x)));
